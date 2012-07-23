@@ -92,6 +92,10 @@ public class ChartGallery extends Gallery {
   {
     if (!allowChangePageSliding)
     {
+      // NPE QuickFix
+      if (getSelectedView() == null) {
+    	  return false;
+      }
       int[] tag = (int[]) getSelectedView().getTag();
       if (tag != null)
       {
