@@ -13,10 +13,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -24,27 +29,26 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.ActionBar.OnNavigationListener;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
 import com.github.andlyticsproject.Preferences.StatsMode;
 import com.github.andlyticsproject.Preferences.Timeframe;
 import com.github.andlyticsproject.admob.AdmobRequest;
-import com.github.andlyticsproject.dialog.ExportDialog;
-import com.github.andlyticsproject.dialog.ImportDialog;
 import com.github.andlyticsproject.exception.AuthenticationException;
 import com.github.andlyticsproject.exception.InvalidJSONResponseException;
 import com.github.andlyticsproject.exception.NetworkException;
-import com.github.andlyticsproject.io.ServiceExceptoin;
 import com.github.andlyticsproject.io.StatsCsvReaderWriter;
 import com.github.andlyticsproject.model.Admob;
 import com.github.andlyticsproject.model.AppInfo;
@@ -54,133 +58,125 @@ import com.github.andlyticsproject.sync.NotificationHandler;
 import com.github.andlyticsproject.util.ChangelogBuilder;
 import com.github.andlyticsproject.util.Utils;
 
-public class Main extends BaseActivity implements AuthenticationCallback {
+public class Main extends BaseActivity implements AuthenticationCallback, OnNavigationListener {
 
 	/** Key for latest version code preference. */
 	private static final String LAST_VERSION_CODE_KEY = "last_version_code";
 
-    public static final String TAG = Main.class.getSimpleName();
-    private boolean cancelRequested;
-    private ListView mainListView;
-    private ContentAdapter db;
-    private TextView statusText;
-    private ViewSwitcher mainViewSwitcher;
-    private MainListAdapter adapter;
-    public boolean dotracking;
-    private View footer;
+	public static final String TAG = Main.class.getSimpleName();
+	private boolean cancelRequested;
+	private ListView mainListView;
+	private ContentAdapter db;
+	private TextView statusText;
+	private ViewSwitcher mainViewSwitcher;
+	private MainListAdapter adapter;
+	public boolean dotracking;
+	private View footer;
 
-    private boolean isAuthenticationRetry;
-    public Animation aniPrevIn;
-    private View statsModeToggle;
-    private StatsMode currentStatsMode;
-    private TextView statsModeText;
-    private ImageView statsModeIcon;
-    public ExportDialog exportDialog;
-    public ImportDialog importDialog;
+	private boolean isAuthenticationRetry;
+	public Animation aniPrevIn;
+	private StatsMode currentStatsMode;
 
-    private static final int FEEDBACK_DIALOG = 0;
+	private MenuItem statsModeMenuItem;
 
+	private List<String> accountsList;
 
+	private static final int REQUEST_CODE_MANAGE_ACCOUNTS = 99;
 
-    /** Called when the activity is first created. */
-    @SuppressWarnings("unchecked")
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-    	requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-        setSupportProgressBarIndeterminateVisibility(false);
+	/** Called when the activity is first created. */
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.main);
+		setSupportProgressBarIndeterminateVisibility(false);
 
 
-        db = getDbAdapter();
-        LayoutInflater layoutInflater = getLayoutInflater();
+		db = getDbAdapter();
+		LayoutInflater layoutInflater = getLayoutInflater();
 
-        // setup main list
-        mainListView = (ListView) findViewById(R.id.main_app_list);
-        mainListView.addHeaderView(layoutInflater.inflate(R.layout.main_list_header, null), null, false);
-        footer = layoutInflater.inflate(R.layout.main_list_footer, null);
-        footer.setVisibility(View.INVISIBLE);
-        TextView accountNameTextView = (TextView) footer.findViewById(R.id.main_app_account_name);
-        accountNameTextView.setText(accountname);
-        mainListView.addFooterView(footer, null, false);
-        adapter = new MainListAdapter(this, accountname, db, currentStatsMode);
-        mainListView.setAdapter(adapter);
-        mainViewSwitcher = (ViewSwitcher) findViewById(R.id.main_viewswitcher);
+		// Hack in case the account is hidden and then the app is killed
+		// which means when it starts up next, it goes straight to the account
+		// even though it shouldn't. To work around this, just mark it as not hidden
+		// in the sense that that change they made never got applied
+		// TODO Do something clever in login activity to prevent this while keeping the ability
+		// to block going 'back'
+		Preferences.saveIsHiddenAccount(this, accountName, false);
 
-        // status & progess bar
-        statusText = (TextView) findViewById(R.id.main_app_status_line);
+		updateAccountsList();
 
-        statsModeToggle = (View) findViewById(R.id.main_button_statsmode);
-        statsModeText = (TextView) findViewById(R.id.main_button_statsmode_text);
-        statsModeIcon = (ImageView) findViewById(R.id.main_button_statsmode_icon);
+		// setup main list
+		mainListView = (ListView) findViewById(R.id.main_app_list);
+		mainListView.addHeaderView(layoutInflater.inflate(R.layout.main_list_header, null), null,
+				false);
+		footer = layoutInflater.inflate(R.layout.main_list_footer, null);
+		footer.setVisibility(View.INVISIBLE);
+		mainListView.addFooterView(footer, null, false);
+		adapter = new MainListAdapter(this, accountName, db, currentStatsMode);
+		mainListView.setAdapter(adapter);
+		mainViewSwitcher = (ViewSwitcher) findViewById(R.id.main_viewswitcher);
 
-        aniPrevIn = AnimationUtils.loadAnimation(Main.this, R.anim.activity_fade_in);
+		// status & progess bar
+		statusText = (TextView) findViewById(R.id.main_app_status_line);
 
-        statsModeToggle.setOnClickListener(new OnClickListener() {
 
-            @Override
-            public void onClick(View v) {
+		aniPrevIn = AnimationUtils.loadAnimation(Main.this, R.anim.activity_fade_in);
 
-                if (currentStatsMode.equals(StatsMode.PERCENT)) {
-                    currentStatsMode = StatsMode.DAY_CHANGES;
-                } else {
-                    currentStatsMode = StatsMode.PERCENT;
-                }
+		dotracking = true;
+		isAuthenticationRetry = false;
 
-                updateStatsMode();
+		currentStatsMode = Preferences.getStatsMode(this);
+		updateStatsMode();
 
-            }
-        });
+		final List<AppInfo> lastAppList = (List<AppInfo>) getLastNonConfigurationInstance();
+		if (lastAppList != null) {
+			getAndlyticsApplication().setSkipMainReload(true);
 
-        View buttonLogout = (View) findViewById(R.id.main_button_logout);
-        buttonLogout.setOnClickListener(new OnClickListener() {
+		}
 
-            @Override
-            public void onClick(View v) {
-                Preferences.removeAccountName(Main.this);
-                Preferences.saveSkipAutoLogin(Main.this, true);
-                Intent intent = new Intent(Main.this, LoginActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_out);
-            }
-        });
-
-        dotracking = true;
-        isAuthenticationRetry = false;
-
-        currentStatsMode = Preferences.getStatsMode(this);
-        updateStatsMode();
-
-        final List<AppInfo> lastAppList = (List<AppInfo>) getLastNonConfigurationInstance();
-        if (lastAppList != null) {
-            getAndlyticsApplication().setSkipMainReload(true);
-
-        }
-
-     // show changelog
+		// show changelog
 		if (isUpdate()) {
 			showChangelog();
 		}
-    }
+	}
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        boolean mainSkipDataReload = getAndlyticsApplication().isSkipMainReload();
 
-        if (!mainSkipDataReload) {
-            new LoadDbEntries().execute(true);
-        } else {
-            new LoadDbEntries().execute(false);
-        }
+	@Override
+	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+		if (!accountsList.get(itemPosition).equals(accountName)) {
+			// Only switch if it is a new account
+			Preferences.removeAccountName(Main.this);
+			Intent intent = new Intent(Main.this, Main.class);
+			intent.putExtra(Constants.AUTH_ACCOUNT_NAME, accountsList.get(itemPosition));
+			startActivity(intent);
+			overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_out);
+			// Call finish to ensure we don't get multiple activities running
+			finish();
+		}
+		return true;
+	}
 
-        getAndlyticsApplication().setSkipMainReload(false);
-    }
+	@Override
+	protected void onResume() {
+		super.onResume();
+		boolean mainSkipDataReload = getAndlyticsApplication().isSkipMainReload();
+
+		if (!mainSkipDataReload) {
+			Utils.execute(new LoadDbEntries(), true);
+		} else {
+			Utils.execute(new LoadDbEntries(), false);
+		}
+
+		getAndlyticsApplication().setSkipMainReload(false);
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 		getSupportMenuInflater().inflate(R.menu.main_menu, menu);
+		statsModeMenuItem = menu.findItem(R.id.itemMainmenuStatsMode);
+		updateStatsMode();
 		return true;
 	}
 
@@ -193,544 +189,537 @@ public class Main extends BaseActivity implements AuthenticationCallback {
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		Intent i = null;
 		switch (item.getItemId()) {
-		case R.id.itemMainmenuRefresh:
-			authenticateAccountFromPreferences(false, Main.this);
-			break;
-		case R.id.itemMainmenuImport:
-			(new LoadImportDialog()).execute();
-			break;
-		case R.id.itemMainmenuExport:
-			(new LoadExportDialog()).execute();
-			break;
-		case R.id.itemMainmenuFeedback:
-			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AndlyticsProject/andlytics/issues")));
-			break;
-		case R.id.itemMainmenuPreferences:
-			Intent i = new Intent(this, PreferenceActivity.class);
-			i.putExtra(Constants.AUTH_ACCOUNT_NAME, accountname);
-			startActivity(i);
-			break;
-		default:
-			return false;
+			case R.id.itemMainmenuRefresh:
+				authenticateAccountFromPreferences(false, Main.this);
+				break;
+			case R.id.itemMainmenuImport:
+				File fileToImport = StatsCsvReaderWriter.getExportFileForAccount(accountName);
+				if (!fileToImport.exists()) {
+					Toast.makeText(this, "Stats file not found: " + fileToImport.getAbsolutePath(),
+							Toast.LENGTH_LONG).show();
+					return true;
+				}
+
+				Intent importIntent = new Intent(this, ImportActivity.class);
+				importIntent.setAction(Intent.ACTION_VIEW);
+				importIntent.setData(Uri.fromFile(fileToImport));
+				startActivity(importIntent);
+				break;
+			case R.id.itemMainmenuExport:
+				Intent exportIntent = new Intent(this, ExportActivity.class);
+				exportIntent.putExtra(ExportActivity.EXTRA_ACCOUNT_NAME, accountName);
+				startActivity(exportIntent);
+				break;
+			case R.id.itemMainmenuFeedback:
+				startActivity(new Intent(Intent.ACTION_VIEW,
+						Uri.parse("https://github.com/AndlyticsProject/andlytics/issues")));
+				break;
+			case R.id.itemMainmenuPreferences:
+				i = new Intent(this, PreferenceActivity.class);
+				i.putExtra(Constants.AUTH_ACCOUNT_NAME, accountName);
+				startActivity(i);
+				break;
+			case R.id.itemMainmenuStatsMode:
+				if (currentStatsMode.equals(StatsMode.PERCENT)) {
+					currentStatsMode = StatsMode.DAY_CHANGES;
+				} else {
+					currentStatsMode = StatsMode.PERCENT;
+				}
+				updateStatsMode();
+				break;
+			case R.id.itemMainmenuAccounts:
+				i = new Intent(this, LoginActivity.class);
+				i.putExtra(Constants.MANAGE_ACCOUNTS_MODE, true);
+				startActivityForResult(i, REQUEST_CODE_MANAGE_ACCOUNTS);
+				break;
+			default:
+				return false;
 		}
 		return true;
 	}
 
-    @Override
-    public Object onRetainNonConfigurationInstance() {
-        return adapter.getAppInfos();
-    }
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// NOTE startActivityForResult does not work when singleTask is set in the manifiest
+		// Therefore, FLAG_ACTIVITY_CLEAR_TOP is used on any intents instead.
+		if (requestCode == REQUEST_CODE_MANAGE_ACCOUNTS) {
+			if (resultCode == RESULT_OK) {
+				// Went to manage accounts, didn't do anything to the current account,
+				// but might have added/removed other accounts
+				updateAccountsList();
+			} else if (resultCode == RESULT_CANCELED) {
+				// The user removed the current account, remove it from preferences and finish
+				// so that the user has to choose an account when they next start the app
+				Preferences.removeAccountName(this);
+				finish();
+			}
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+
+
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		return adapter.getAppInfos();
+	}
+
+	@Override
+	protected void onPostResume() {
+		super.onPostResume();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+	}
+
+	@Override
+	protected void onDestroy() {
+		statsModeMenuItem = null;
+		super.onDestroy();
+	}
+
+	private void updateAccountsList() {
+		final AccountManager manager = AccountManager.get(this);
+		final Account[] accounts = manager.getAccountsByType(Constants.ACCOUNT_TYPE_GOOGLE);
+		if (accounts.length > 1) {
+			accountsList = new ArrayList<String>();
+			int selectedIndex = 0;
+			int index = 0;
+			for (Account account : accounts) {
+				if (!Preferences.getIsHiddenAccount(this, account.name)) {
+					accountsList.add(account.name);
+					if (account.name.equals(accountName)) {
+						selectedIndex = index;
+					}
+					index++;
+				}
+			}
+			if (accountsList.size() > 1) {
+				// Only use the spinner if we have multiple accounts
+				Context context = getSupportActionBar().getThemedContext();
+				AccountSelectorAdaper accountsAdapter = new AccountSelectorAdaper(context,
+						R.layout.account_selector_item, accountsList);
+				accountsAdapter
+						.setDropDownViewResource(com.actionbarsherlock.R.layout.sherlock_spinner_dropdown_item);
+
+				// Hide the title to avoid duplicated info on tablets/landscape & setup the spinner
+				getSupportActionBar().setDisplayShowTitleEnabled(false);
+				getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+				getSupportActionBar().setListNavigationCallbacks(accountsAdapter, this);
+				getSupportActionBar().setSelectedNavigationItem(selectedIndex);
+			} else {
+				// Just one account so use the standard title/subtitle
+				getSupportActionBar().setDisplayShowTitleEnabled(true);
+				getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+				getSupportActionBar().setTitle(R.string.app_name);
+				getSupportActionBar().setSubtitle(accountName);
+			}
+		}
+	}
+
+	private void updateMainList(List<AppInfo> apps) {
+
+		if (apps != null) {
+
+			if (apps.size() > 0) {
+				footer.setVisibility(View.VISIBLE);
+
+				String autosyncSet = Preferences.getAutosyncSet(Main.this, accountName);
+				if (autosyncSet == null) {
+
+					// set autosync default value
+					AutosyncHandlerFactory.getInstance(Main.this).setAutosyncPeriod(accountName,
+							AutosyncHandler.DEFAULT_PERIOD);
+
+					Preferences.saveAutosyncSet(Main.this, accountName);
+				}
+			}
+
+			adapter.setAppInfos(apps);
+			adapter.notifyDataSetChanged();
+
+			Date lastUpdateDate = null;
 
-    @Override
-    protected void onPostResume() {
-        super.onPostResume();
-    }
+			for (int i = 0; i < apps.size(); i++) {
+				Date dateObject = apps.get(i).getLastUpdate();
+				if (lastUpdateDate == null || lastUpdateDate.before(dateObject)) {
+					lastUpdateDate = dateObject;
+				}
+			}
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
+			if (lastUpdateDate != null) {
+				statusText.setText(this.getString(R.string.last_update) + ": "
+						+ ContentAdapter.formatDate(lastUpdateDate));
+			}
 
-    private void updateMainList(List<AppInfo> apps) {
+		}
 
-        if (apps != null) {
+		if (!(R.id.main_app_list == mainViewSwitcher.getCurrentView().getId())) {
+			mainViewSwitcher.showNext();
+		}
 
-            if (apps.size() > 0) {
-                footer.setVisibility(View.VISIBLE);
+	}
 
-                String autosyncSet = Preferences.getAutosyncSet(Main.this, accountname);
-                if (autosyncSet == null) {
+	// TODO Make this a static class and use a callback for UI updates, or move to fragments with savedInstanceState
+	private class LoadRemoteEntries extends AsyncTask<String, Integer, Exception> {
 
-                    // set autosync default value
-                    AutosyncHandlerFactory.getInstance(Main.this).setAutosyncPeriod(accountname,
-                                    AutosyncHandler.DEFAULT_PERIOD);
+		@SuppressWarnings("unchecked")
+		@Override
+		protected Exception doInBackground(String... params) {
 
-                    Preferences.saveAutosyncSet(Main.this, accountname);
-                }
-            }
+			// authentication failed before, retry with token invalidation
 
-            adapter.setAppInfos(apps);
-            adapter.notifyDataSetChanged();
+			Exception exception = null;
 
-            Date lastUpdateDate = null;
 
-            for (int i = 0; i < apps.size(); i++) {
-                Date dateObject = apps.get(i).getLastUpdate();
-                if (lastUpdateDate == null || lastUpdateDate.before(dateObject)) {
-                    lastUpdateDate = dateObject;
-                }
-            }
+			String authtoken = ((AndlyticsApp) getApplication()).getAuthToken();
 
-            if (lastUpdateDate != null) {
-                statusText.setText(this.getString(R.string.last_update) + ": " + ContentAdapter.formatDate(lastUpdateDate));
-            }
 
-        }
+			List<AppInfo> appDownloadInfos = null;
+			try {
 
-        if (!(R.id.main_app_list == mainViewSwitcher.getCurrentView().getId())) {
-            mainViewSwitcher.showNext();
-        }
+				DeveloperConsole console = new DeveloperConsole(Main.this);
+				appDownloadInfos = console.getAppDownloadInfos(authtoken, accountName);
 
-    }
+				if (cancelRequested) {
+					cancelRequested = false;
+					return null;
+				}
 
-    private class LoadRemoteEntries extends AsyncTask<String, Integer, Exception> {
+				Map<String, List<String>> admobAccountSiteMap = new HashMap<String, List<String>>();
 
-        @SuppressWarnings("unchecked")
-        @Override
-        protected Exception doInBackground(String... params) {
+				List<AppStatsDiff> diffs = new ArrayList<AppStatsDiff>();
 
-            // authentication failed before, retry with token invalidation
+				for (AppInfo appDownloadInfo : appDownloadInfos) {
+					// update in database and check for diffs
+					diffs.add(db.insertOrUpdateStats(appDownloadInfo));
+					String admobSiteId = Preferences.getAdmobSiteId(Main.this,
+							appDownloadInfo.getPackageName());
+					if (admobSiteId != null) {
+						String admobAccount = Preferences.getAdmobAccount(Main.this, admobSiteId);
+						if (admobAccount != null) {
+							List<String> siteList = admobAccountSiteMap.get(admobAccount);
+							if (siteList == null) {
+								siteList = new ArrayList<String>();
+							}
+							siteList.add(admobSiteId);
+							admobAccountSiteMap.put(admobAccount, siteList);
+						}
+					}
+				}
 
-            Exception exception = null;
+				// check for notifications
+				NotificationHandler.handleNotificaions(Main.this, diffs, accountName);
 
+				// sync admob accounts
+				Set<String> admobAccuntKeySet = admobAccountSiteMap.keySet();
+				for (String admobAccount : admobAccuntKeySet) {
 
+					AdmobRequest.syncSiteStats(admobAccount, Main.this,
+							admobAccountSiteMap.get(admobAccount), null);
+				}
 
-                String authtoken = ((AndlyticsApp) getApplication()).getAuthToken();
+				Utils.execute(new LoadIconInCache(), appDownloadInfos);
 
+			} catch (Exception e) {
 
-                List<AppInfo> appDownloadInfos = null;
-                try {
+				if (e instanceof IOException) {
+					e = new NetworkException(e);
+				}
 
-                    DeveloperConsole console = new DeveloperConsole(Main.this);
-                    appDownloadInfos = console.getAppDownloadInfos(authtoken, accountname);
+				exception = e;
 
-                    if (cancelRequested) {
-                        cancelRequested = false;
-                        return null;
-                    }
+				Log.e(TAG, "error while requesting developer console", e);
+				e.printStackTrace();
+			}
 
-                    Map<String, List<String>> admobAccountSiteMap = new HashMap<String, List<String>>();
+			if (dotracking == true) {
+				int size = 0;
+				if (appDownloadInfos != null) {
+					size = appDownloadInfos.size();
+				}
+				// TODO endless loop in case of exception!!!
+				if (exception == null) {
+					Map<String, String> map = new HashMap<String, String>();
+					map.put("num", size + "");
+				} else {
+				}
+				dotracking = false;
+			}
 
-                    List<AppStatsDiff> diffs = new ArrayList<AppStatsDiff>();
 
-                    for (AppInfo appDownloadInfo : appDownloadInfos) {
-                        // update in database and check for diffs
-                        diffs.add(db.insertOrUpdateStats(appDownloadInfo));
-                        String admobSiteId = Preferences.getAdmobSiteId(Main.this, appDownloadInfo.getPackageName());
-                        if(admobSiteId != null) {
-                            String admobAccount = Preferences.getAdmobAccount(Main.this, admobSiteId);
-                            if(admobAccount != null) {
-                                List<String> siteList = admobAccountSiteMap.get(admobAccount);
-                                if(siteList == null) {
-                                    siteList = new ArrayList<String>();
-                                }
-                                siteList.add(admobSiteId);
-                                admobAccountSiteMap.put(admobAccount, siteList);
-                            }
-                        }
-                    }
+			return exception;
+		}
 
-                    // check for notifications
-                    NotificationHandler.handleNotificaions(Main.this, diffs, accountname);
+		/*
+		 * (non-Javadoc)
+		 *
+		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+		 */
+		@Override
+		protected void onPostExecute(Exception e) {
 
-                    // sync admob accounts
-                    Set<String> admobAccuntKeySet = admobAccountSiteMap.keySet();
-                    for (String admobAccount : admobAccuntKeySet) {
+			setSupportProgressBarIndeterminateVisibility(false);
 
-                        AdmobRequest.syncSiteStats(admobAccount, Main.this, admobAccountSiteMap.get(admobAccount), null);
-                    }
+			if (e != null) {
 
-                    new LoadIconInCache().execute(appDownloadInfos);
+				if ((e instanceof InvalidJSONResponseException || e instanceof AuthenticationException)
+						&& !isAuthenticationRetry) {
+					Log.w("Andlytics", "authentication faild, retry with new token");
+					isAuthenticationRetry = true;
+					authenticateAccountFromPreferences(true, Main.this);
 
-                } catch (Exception e) {
 
-                    if(e instanceof IOException) {
-                        e = new NetworkException(e);
-                    }
+				} else {
+					handleUserVisibleException(e);
+					new LoadDbEntries().execute(false);
+				}
 
-                    exception = e;
+			} else {
+				new LoadDbEntries().execute(false);
+			}
 
-                    Log.e(TAG, "error while requesting developer console", e);
-                }
+		}
 
-                if (dotracking == true) {
-                    int size = 0;
-                    if (appDownloadInfos != null) {
-                        size = appDownloadInfos.size();
-                    }
-                    // TODO endless loop in case of exception!!!
-                    if (exception == null) {
-                        Map<String, String> map = new HashMap<String, String>();
-                        map.put("num", size + "");
-                    } else {
-                    }
-                    dotracking = false;
-                }
+		/*
+		 * (non-Javadoc)
+		 *
+		 * @see android.os.AsyncTask#onPreExecute()
+		 */
+		@Override
+		protected void onPreExecute() {
+			setSupportProgressBarIndeterminateVisibility(true);
+		}
 
+	}
 
+	private class LoadDbEntries extends AsyncTask<Boolean, Void, Boolean> {
 
-            return exception;
-        }
+		private List<AppInfo> allStats = new ArrayList<AppInfo>();
+		private List<AppInfo> filteredStats = new ArrayList<AppInfo>();
 
-        /*
-         * (non-Javadoc)
-         *
-         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-         */
-        @Override
-        protected void onPostExecute(Exception e) {
+		private Boolean triggerRemoteCall;
 
-            setSupportProgressBarIndeterminateVisibility(false);
+		@Override
+		protected Boolean doInBackground(Boolean... params) {
 
-            if (e != null) {
+			allStats = db.getAllAppsLatestStats(accountName);
 
-                if ((e instanceof InvalidJSONResponseException || e instanceof AuthenticationException)
-                                && !isAuthenticationRetry) {
-                    Log.w("Andlytics", "authentication faild, retry with new token");
-                    isAuthenticationRetry = true;
-                    authenticateAccountFromPreferences(true, Main.this);
+			for (AppInfo appInfo : allStats) {
 
+				if (!appInfo.isGhost()) {
+					String admobSiteId = Preferences.getAdmobSiteId(Main.this,
+							appInfo.getPackageName());
+					if (admobSiteId != null) {
+						List<Admob> admobStats = db.getAdmobStats(admobSiteId,
+								Timeframe.LAST_TWO_DAYS).getAdmobs();
+						if (admobStats.size() > 0) {
+							Admob admob = admobStats.get(admobStats.size() - 1);
+							appInfo.setAdmobStats(admob);
+						}
+					}
+					filteredStats.add(appInfo);
+				}
 
-                } else {
-                    handleUserVisibleException(e);
-                    new LoadDbEntries().execute(false);
-                }
+			}
 
-            } else {
-                new LoadDbEntries().execute(false);
-            }
 
-        }
+			triggerRemoteCall = params[0];
 
-        /*
-         * (non-Javadoc)
-         *
-         * @see android.os.AsyncTask#onPreExecute()
-         */
-        @Override
-        protected void onPreExecute() {
-            setSupportProgressBarIndeterminateVisibility(true);
-        }
+			return null;
+		}
 
-    }
+		@Override
+		protected void onPostExecute(Boolean result) {
 
-    private class LoadDbEntries extends AsyncTask<Boolean, Void, Boolean> {
+			updateMainList(filteredStats);
 
-        private List<AppInfo> allStats = new ArrayList<AppInfo>();
-        private List<AppInfo> filteredStats = new ArrayList<AppInfo>();
+			if (triggerRemoteCall) {
+				authenticateAccountFromPreferences(false, Main.this);
 
-        private Boolean triggerRemoteCall;
+			} else {
 
-        @Override
-        protected Boolean doInBackground(Boolean... params) {
+				if (allStats.size() == 0) {
+					Toast.makeText(Main.this, R.string.no_published_apps, Toast.LENGTH_LONG).show();
+				}
+			}
 
-            allStats = db.getAllAppsLatestStats(accountname);
+		}
 
-            for (AppInfo appInfo : allStats) {
+	}
 
-                if (!appInfo.isGhost()) {
-                    String admobSiteId = Preferences.getAdmobSiteId(Main.this, appInfo.getPackageName());
-                    if(admobSiteId != null) {
-                        List<Admob> admobStats = db.getAdmobStats(admobSiteId, Timeframe.LAST_TWO_DAYS).getAdmobs();
-                        if(admobStats.size() > 0) {
-                            Admob admob = admobStats.get(admobStats.size() -1);
-                            appInfo.setAdmobStats(admob);
-                        }
-                    }
-                    filteredStats.add(appInfo);
-                }
+	private class LoadIconInCache extends AsyncTask<List<AppInfo>, Void, Boolean> {
 
-            }
+		@Override
+		protected Boolean doInBackground(List<AppInfo>... params) {
 
+			List<AppInfo> appInfos = params[0];
 
-            triggerRemoteCall = params[0];
+			Boolean success = false;
 
-            return null;
-        }
+			for (AppInfo appInfo : appInfos) {
 
-        @Override
-        protected void onPostExecute(Boolean result) {
+				String iconUrl = appInfo.getIconUrl();
 
-            updateMainList(filteredStats);
+				if (iconUrl != null) {
 
-            if (triggerRemoteCall) {
-                authenticateAccountFromPreferences(false, Main.this);
+					File iconFile = new File(getCacheDir() + "/" + appInfo.getIconName());
+					if (!iconFile.exists()) {
 
-            } else {
+						try {
+							iconFile.createNewFile();
+							URL url = new URL(iconUrl);
+							HttpURLConnection c = (HttpURLConnection) url.openConnection();
+							c.setRequestMethod("GET");
+							//c.setDoOutput(true);
+							c.connect();
 
-                if (allStats.size() == 0) {
-                    Toast.makeText(Main.this, R.string.no_published_apps, Toast.LENGTH_LONG).show();
-                }
-            }
+							FileOutputStream fos = new FileOutputStream(iconFile);
 
-        }
+							InputStream is = c.getInputStream();
 
-    }
+							byte[] buffer = new byte[1024];
+							int len1 = 0;
+							while ((len1 = is.read(buffer)) != -1) {
+								fos.write(buffer, 0, len1);
+							}
+							fos.close();
+							is.close();
 
-    private class LoadIconInCache extends AsyncTask<List<AppInfo>, Void, Boolean> {
+							success = true;
+						} catch (IOException e) {
 
-        @Override
-        protected Boolean doInBackground(List<AppInfo>... params) {
+							if (iconFile.exists()) {
+								iconFile.delete();
+							}
 
-            List<AppInfo> appInfos = params[0];
+							Log.d("log_tag", "Error: " + e);
+						}
 
-            Boolean success = false;
+					}
+				}
 
-            for (AppInfo appInfo : appInfos) {
+			}
 
-                String iconUrl = appInfo.getIconUrl();
+			return success;
 
-                if (iconUrl != null) {
+		}
 
-                    File iconFile = new File(getCacheDir() + "/" + appInfo.getIconName());
-                    if (!iconFile.exists()) {
+		@Override
+		protected void onPostExecute(Boolean success) {
+			if (success) {
+				adapter.notifyDataSetChanged();
+			}
+		}
 
-                        try {
-                            iconFile.createNewFile();
-                            URL url = new URL(iconUrl);
-                            HttpURLConnection c = (HttpURLConnection) url.openConnection();
-                            c.setRequestMethod("GET");
-                            //c.setDoOutput(true);
-                            c.connect();
+	}
 
-                            FileOutputStream fos = new FileOutputStream(iconFile);
+	@Override
+	public void onBackPressed() {
+		super.onBackPressed();
+	}
 
-                            InputStream is = c.getInputStream();
 
-                            byte[] buffer = new byte[1024];
-                            int len1 = 0;
-                            while ((len1 = is.read(buffer)) != -1) {
-                                fos.write(buffer, 0, len1);
-                            }
-                            fos.close();
-                            is.close();
+	@Override
+	protected void onStop() {
+		super.onStop();
+	}
 
-                            success = true;
-                        } catch (IOException e) {
+	private void updateStatsMode() {
+		if (statsModeMenuItem != null) {
+			switch (currentStatsMode) {
+				case PERCENT:
+					statsModeMenuItem.setTitle(R.string.daily);
+					statsModeMenuItem.setIcon(R.drawable.icon_plusminus);
+					break;
 
-                            if (iconFile.exists()) {
-                                iconFile.delete();
-                            }
+				case DAY_CHANGES:
+					statsModeMenuItem.setTitle(R.string.percentage);
+					statsModeMenuItem.setIcon(R.drawable.icon_percent);
+					break;
 
-                            Log.d("log_tag", "Error: " + e);
-                        }
+				default:
+					break;
+			}
+		}
+		adapter.setStatsMode(currentStatsMode);
+		adapter.notifyDataSetChanged();
+		Preferences.saveStatsMode(currentStatsMode, Main.this);
+	}
 
-                    }
-                }
+	/*
+	@SuppressWarnings("unchecked")
+	@Override
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
 
-            }
+	    if (keyCode == KeyEvent.KEYCODE_I) {
+	        Intent intent = new Intent(this, DemoDataActivity.class);
+	        intent.putExtra(Constants.AUTH_ACCOUNT_NAME, accountname);
+	        startActivity(intent);
+	        return true;
+	    } else if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+	        Preferences.removeAccountName(Main.this);
+	        Intent intent = new Intent(Main.this, LoginActivity.class);
+	        startActivity(intent);
+	        overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_out);
+	        return true;
+	    } else if (keyCode == KeyEvent.KEYCODE_D) {
 
-            return success;
+	        try {
+	            //List<AppInfo> allAppsLatestStats = db.getAllAppsLatestStats(accountname);
+	            //for (AppInfo appInfo : allAppsLatestStats) {
+	                //db.deleteAllForPackageName(appInfo.getPackageName());
+	            //}
+	        } catch (Exception e) {
+	            showCrashDialog(e);
+	        }
+	        return true;
+	    } else {
 
-        }
+	        try {
+	            Integer.parseInt(event.getNumber() + "");
 
-        @Override
-        protected void onPostExecute(Boolean success) {
-            if (success) {
-                adapter.notifyDataSetChanged();
-            }
-        }
+	            DeveloperConsole console = new DeveloperConsole(Main.this);
+	            List<AppInfo> appDownloadInfos;
+	            try {
+	                appDownloadInfos = console.parseAppStatisticsResponse(DemoDataActivity.readTestData(event.getNumber()),
+	                        accountname);
 
-    }
+	                for (AppInfo appDownloadInfo : appDownloadInfos) {
+	                    // update in database
 
-    private class LoadExportDialog extends AsyncTask<Boolean, Void, Boolean> {
+	                    db.insertOrUpdateStats(appDownloadInfo);
 
-        private List<AppInfo> allStats;
+	                    new LoadIconInCache().execute(appDownloadInfos);
 
-        @Override
-        protected Boolean doInBackground(Boolean... params) {
+	                }
+	            } catch (AuthenticationException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+	            }
 
-            allStats = db.getAllAppsLatestStats(accountname);
+	        } catch (NumberFormatException e) {
+	            e.printStackTrace();
+	        } catch (DeveloperConsoleException e) {
+	            e.printStackTrace();
+	        } catch (InvalidJSONResponseException e) {
+	            e.printStackTrace();
+	        }
 
-            return null;
-        }
+	    }
+	    return false;
+	}*/
 
-        @Override
-        protected void onPostExecute(Boolean result) {
+	@Override
+	public void authenticationSuccess() {
+		Utils.execute(new LoadRemoteEntries(), null);
+	}
 
-            if (!isFinishing()) {
-                exportDialog = new ExportDialog(Main.this, allStats, accountname);
-                exportDialog.show();
-            }
-        }
 
-    }
-
-    private class LoadImportDialog extends AsyncTask<Boolean, Void, Boolean> {
-
-        private List<String> fileNames;
-
-        @Override
-        protected Boolean doInBackground(Boolean... params) {
-
-            if (android.os.Environment.getExternalStorageState().equals(
-                            android.os.Environment.MEDIA_MOUNTED)) {
-
-                List<AppInfo> allStats = db.getAllAppsLatestStats(accountname);
-                try {
-                    fileNames = StatsCsvReaderWriter.getImportFileNames(accountname, allStats);
-                } catch (ServiceExceptoin e) {
-                    e.printStackTrace();
-                    return false;
-                }
-                return true;
-
-            } else {
-
-                return false;
-            }
-
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-
-            if (!isFinishing()) {
-
-                if(result) {
-                    importDialog = new ImportDialog(Main.this, fileNames, accountname);
-                    importDialog.show();
-                } else {
-                    Toast.makeText(Main.this, "SD-Card not mounted or invalid file format, can't import!", Toast.LENGTH_LONG).show();
-                }
-            }
-        }
-
-    }
-
-    @Override
-    public void onBackPressed() {
-        Preferences.removeAccountName(Main.this);
-        super.onBackPressed();
-    }
-
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    private void updateStatsMode() {
-        switch (currentStatsMode) {
-        case PERCENT:
-            statsModeText.setText(this.getString(R.string.daily));
-            statsModeIcon.setImageDrawable(getResources().getDrawable(R.drawable.icon_plusminus));
-            break;
-
-        case DAY_CHANGES:
-            statsModeText.setText(this.getString(R.string.percentage));
-            statsModeIcon.setImageDrawable(getResources().getDrawable(R.drawable.icon_percent));
-            break;
-
-        default:
-            break;
-        }
-
-        adapter.setStatsMode(currentStatsMode);
-        adapter.notifyDataSetChanged();
-        Preferences.saveStatsMode(currentStatsMode, Main.this);
-    }
-    /*
-    @SuppressWarnings("unchecked")
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-
-        if (keyCode == KeyEvent.KEYCODE_I) {
-            Intent intent = new Intent(this, DemoDataActivity.class);
-            intent.putExtra(Constants.AUTH_ACCOUNT_NAME, accountname);
-            startActivity(intent);
-            return true;
-        } else if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            Preferences.removeAccountName(Main.this);
-            Intent intent = new Intent(Main.this, LoginActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_out);
-            return true;
-        } else if (keyCode == KeyEvent.KEYCODE_D) {
-
-            try {
-                //List<AppInfo> allAppsLatestStats = db.getAllAppsLatestStats(accountname);
-                //for (AppInfo appInfo : allAppsLatestStats) {
-                    //db.deleteAllForPackageName(appInfo.getPackageName());
-                //}
-            } catch (Exception e) {
-                showCrashDialog(e);
-            }
-            return true;
-        } else {
-
-            try {
-                Integer.parseInt(event.getNumber() + "");
-
-                DeveloperConsole console = new DeveloperConsole(Main.this);
-                List<AppInfo> appDownloadInfos;
-                try {
-                    appDownloadInfos = console.parseAppStatisticsResponse(DemoDataActivity.readTestData(event.getNumber()),
-                            accountname);
-
-                    for (AppInfo appDownloadInfo : appDownloadInfos) {
-                        // update in database
-
-                        db.insertOrUpdateStats(appDownloadInfo);
-
-                        new LoadIconInCache().execute(appDownloadInfos);
-
-                    }
-                } catch (AuthenticationException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            } catch (DeveloperConsoleException e) {
-                e.printStackTrace();
-            } catch (InvalidJSONResponseException e) {
-                e.printStackTrace();
-            }
-
-        }
-        return false;
-    }*/
-
-    //TODO remove...
-    @Override
-    protected Dialog onCreateDialog(int id) {
-
-        Dialog dialog = null;
-
-        switch (id) {
-        case FEEDBACK_DIALOG:
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AndlyticsProject/andlytics/issues")));
-/*
-            FeedbackDialog.FeedbackDialogBuilder builder = new FeedbackDialogBuilder(Main.this);
-            builder.setTitle(this.getString(R.string.feedback));
-
-            builder.setMessage(this.getString(R.string.help_us));
-            builder.setPositiveButton(this.getString(R.string.send), new DialogInterface.OnClickListener() {
-
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-
-            });
-            builder.setNegativeButton(this.getString(R.string.cancel), new DialogInterface.OnClickListener() {
-
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-
-            });
-
-            dialog = builder.create(accountname + "\n\n", getApplication());
-*/
-            break;
-
-        default:
-            break;
-        }
-
-        return dialog;
-    }
-
-    @Override
-    public void authenticationSuccess() {
-        new LoadRemoteEntries().execute();
-    }
-
-
-    //FIXME isUpdate
+	//FIXME isUpdate
 
 	/**
 	 * checks if the app is started for the first time (after an update).
@@ -744,13 +733,11 @@ public class Main extends BaseActivity implements AuthenticationCallback {
 		// AndroidManifest.xml
 		final int versionCode = Utils.getActualVersionCode(this);
 
-		final SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(this);
+		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		final long lastVersionCode = prefs.getLong(LAST_VERSION_CODE_KEY, 0);
 
 		if (versionCode != lastVersionCode) {
-			Log.i(TAG, "versionCode " + versionCode
-					+ " is different from the last known version "
+			Log.i(TAG, "versionCode " + versionCode + " is different from the last known version "
 					+ lastVersionCode);
 			return true;
 		} else {
@@ -761,8 +748,7 @@ public class Main extends BaseActivity implements AuthenticationCallback {
 
 	private void showChangelog() {
 		final int versionCode = Utils.getActualVersionCode(this);
-		final SharedPreferences sp = PreferenceManager
-				.getDefaultSharedPreferences(this);
+		final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 		ChangelogBuilder.create(this, new Dialog.OnClickListener() {
 
 			public void onClick(DialogInterface dialogInterface, int i) {
@@ -772,6 +758,54 @@ public class Main extends BaseActivity implements AuthenticationCallback {
 				dialogInterface.dismiss();
 			}
 		}).show();
+	}
+
+	private static class AccountSelectorAdaper extends ArrayAdapter<String> {
+		private Context context;
+		private List<String> accounts;
+		private int textViewResourceId;
+
+		public AccountSelectorAdaper(Context context, int textViewResourceId, List<String> objects) {
+			super(context, textViewResourceId, objects);
+			this.context = context;
+			this.accounts = objects;
+			this.textViewResourceId = textViewResourceId;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			View rowView = convertView;
+			if (rowView == null) {
+				LayoutInflater inflater = (LayoutInflater) context
+						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				rowView = inflater.inflate(textViewResourceId, parent, false);
+			}
+
+			TextView subtitle = (TextView) rowView.findViewById(android.R.id.text1);
+			subtitle.setText(accounts.get(position));
+			Resources res = context.getResources();
+			if (res.getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+				// Scale the text down slightly to fit on landscape due to the shorter Action Bar
+				// and additional padding due to the drop down
+				// We don't use predefined values as it saves duplicating all of the different display
+				// configuration values from the ABS library
+				float px = subtitle.getTextSize() * 0.9f;
+				subtitle.setTextSize(px / (res.getDisplayMetrics().densityDpi / 160f));
+
+			}
+
+			// TODO In the future when accounts linked to multiple developer consoles are supported
+			// we can either merge all the apps together, or extend this adapter to let the user select 
+			// account/console E.g:
+			// account1
+			// account2/console1
+			// account2/console2
+			// ...
+
+			return rowView;
+		}
+
+
 	}
 
 }

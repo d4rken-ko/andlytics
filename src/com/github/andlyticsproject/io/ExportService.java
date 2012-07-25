@@ -1,157 +1,163 @@
 package com.github.andlyticsproject.io;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.zip.ZipOutputStream;
+
+import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.IBinder;
 import android.util.Log;
 
-import java.io.IOException;
-
 import com.github.andlyticsproject.ContentAdapter;
-import com.github.andlyticsproject.R;
 import com.github.andlyticsproject.Preferences.Timeframe;
+import com.github.andlyticsproject.R;
 import com.github.andlyticsproject.model.AppStatsList;
+import com.github.andlyticsproject.util.Utils;
 
+public class ExportService extends IntentService {
 
-public class ExportService extends Service {
+	private static final String TAG = ExportService.class.getSimpleName();
 
-    private static final String TAG = ExportService.class.getSimpleName();
+	public static final int NOTIFICATION_ID_PROGRESS = 1;
+	public static final int NOTIFICATION_ID_FINISHED = 1;
 
-    public static final int NOTIFICATION_ID_PROGRESS = 1;
+	public static final String EXTRA_PACKAGE_NAMES = "packageNames";
+	public static final String EXTRA_ACCOUNT_NAME = "accountName";
 
-    public static final int NOTIFICATION_ID_FINISHED = 1;
+	private Notification notification;
 
-    public static final String PACKAGE_NAMES = "packageNames";
+	private boolean errors = false;
 
-    public static final String ACCOUNT_NAME = "accountName";
+	private String[] packageNames;
 
-    private Notification notification;
+	private String accountName;
 
-    private String message;
+	private NotificationManager notificationManager;
 
-    private boolean errors = false;
+	public ExportService() {
+		super("andlytics ExportService");
+	}
 
-    private String[] packageNames;
+	@SuppressWarnings("deprecation")
+	@Override
+	public void onCreate() {
+		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		this.notification = new Notification(R.drawable.statusbar_andlytics, getResources()
+				.getString(R.string.app_name)
+				+ ": "
+				+ getApplicationContext().getString(R.string.export_started),
+				System.currentTimeMillis());
+		this.notification.flags = notification.flags | Notification.FLAG_ONGOING_EVENT
+				| Notification.FLAG_AUTO_CANCEL;
+		super.onCreate();
+	}
 
-    private String accountName;
+	@Override
+	protected void onHandleIntent(Intent intent) {
+		Log.d(TAG, "export service onStartCommand");
 
-    @Override
-    public void onCreate() {
+		this.packageNames = intent.getStringArrayExtra(EXTRA_PACKAGE_NAMES);
+		Log.d(TAG, "package names:: " + packageNames);
 
-        this.notification = new Notification(R.drawable.statusbar_andlytics, getResources().getString(R.string.app_name) + ": "+ getApplicationContext().getString(R.string.export_started), System.currentTimeMillis());
-        this.notification.flags = notification.flags | Notification.FLAG_ONGOING_EVENT | Notification.FLAG_AUTO_CANCEL;
-        super.onCreate();
-    }
+		this.accountName = intent.getStringExtra(EXTRA_ACCOUNT_NAME);
+		Log.d(TAG, "account name:: " + accountName);
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+		boolean success = exportStats();
+		notifyExportFinished(success);
+	}
 
-        Log.d(TAG, "export service onStartCommand");
+	private boolean exportStats() {
+		String message = getApplicationContext().getString(R.string.export_started);
+		sendNotification(message);
 
-        this.packageNames = intent.getStringArrayExtra(PACKAGE_NAMES);
-        Log.d(TAG, "package names:: " + packageNames);
+		File dir = StatsCsvReaderWriter.getExportDir();
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
 
-        this.accountName = intent.getStringExtra(ACCOUNT_NAME);
-        Log.d(TAG, "account name:: " + accountName);
+		try {
+			File zipFile = StatsCsvReaderWriter.getExportFileForAccount(accountName);
+			ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(zipFile));
+			StatsCsvReaderWriter statsWriter = new StatsCsvReaderWriter(this);
+			ContentAdapter db = new ContentAdapter(this);
+			try {
+				for (int i = 0; i < packageNames.length; i++) {
+					AppStatsList statsForApp = db.getStatsForApp(packageNames[i],
+							Timeframe.UNLIMITED, false);
+					statsWriter.writeStats(packageNames[i], statsForApp.getAppStats(), zip);
+				}
+			} catch (IOException e) {
+				Log.d(TAG, "Zip error, deleting incomplete file.");
+				zipFile.delete();
+			} finally {
+				zip.close();
+			}
 
+			Utils.scanFile(this, zipFile.getAbsolutePath());
+		} catch (IOException e) {
+			Log.e(TAG, "Error zipping CSV files: " + e.getMessage(), e);
 
-        (new StandardServiceWorker()).execute();
+			return false;
+		}
 
-        return Service.START_NOT_STICKY;
-    }
+		message = getResources().getString(R.string.app_name) + ": "
+				+ getApplicationContext().getString(R.string.export_finished);
+		sendNotification(message);
 
-    /**
-     * Asynchronous task.
-     */
-    private class StandardServiceWorker extends AsyncTask<Void, Integer, Boolean> {
+		return !errors;
+	}
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
+	@SuppressWarnings("deprecation")
+	private void notifyExportFinished(boolean success) {
+		// clear progress notification
+		notificationManager.cancel(NOTIFICATION_ID_PROGRESS);
 
+		Intent shareIntent = createShareIntent();
+		PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+				shareIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+		notification.contentIntent = pendingIntent;
 
-            message = getApplicationContext().getString(R.string.export_started);
-            sendNotification();
+		String message = getApplicationContext().getString(R.string.export_saved_to) + ": "
+				+ StatsCsvReaderWriter.getExportDirPath();
+		notification = new Notification(R.drawable.statusbar_andlytics, message,
+				System.currentTimeMillis());
+		notification.setLatestEventInfo(getApplicationContext(),
+				getResources().getString(R.string.app_name) + ": "
+						+ getApplicationContext().getString(R.string.export_finished), message,
+				pendingIntent);
+		notification.defaults |= Notification.DEFAULT_SOUND;
+		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 
-            for (int i = 0; i < packageNames.length; i++) {
+		notificationManager.notify(NOTIFICATION_ID_FINISHED, notification);
+	}
 
-                StatsCsvReaderWriter statsWriter = new StatsCsvReaderWriter(ExportService.this);
+	private Intent createShareIntent() {
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.setType("application/zip");
+		File zipFile = StatsCsvReaderWriter.getExportFileForAccount(accountName);
+		intent.putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(zipFile.getAbsolutePath()));
 
-                ContentAdapter db = new ContentAdapter(ExportService.this);
-                AppStatsList statsForApp = db.getStatsForApp(packageNames[i], Timeframe.UNLIMITED, false);
+		return Intent.createChooser(intent, (getString(R.string.share)));
+	}
 
-                try {
-                    statsWriter.writeStats(packageNames[i], statsForApp.getAppStats());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
+	/**
+	 * Send a notification to the progress bar.
+	 */
+	@SuppressWarnings("deprecation")
+	protected void sendNotification(String message) {
+		Intent startActivityIntent = new Intent();
+		PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+				startActivityIntent, 0);
 
-                publishProgress(i);
-
-            }
-
-            message = getResources().getString(R.string.app_name) + ": "+ getApplicationContext().getString(R.string.export_finished);
-            sendNotification();
-
-            return !errors;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            //message = "Exporting: " + packageNames[values[0]];
-            //sendNotification();
-        }
-
-        @Override
-        protected void onPostExecute(Boolean success) {
-
-            // clear progress notification
-            NotificationManager notificationManager = (NotificationManager)
-                    getSystemService(Context.NOTIFICATION_SERVICE);
-
-            notificationManager.cancel(NOTIFICATION_ID_PROGRESS);
-
-
-            notification = new Notification(R.drawable.statusbar_andlytics, message, System.currentTimeMillis());
-
-            Intent startActivityIntent = new Intent(ExportService.this, ExportService.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, startActivityIntent, 0);
-            notification.contentIntent = pendingIntent;
-
-            message = getApplicationContext().getString(R.string.export_saved_to) + ": " + StatsCsvReaderWriter.getDefaultDirectory();
-
-            notification.setLatestEventInfo(getApplicationContext(), getResources().getString(R.string.app_name) + ": "+ getApplicationContext().getString(R.string.export_finished), message, pendingIntent);
-            notification.defaults |= Notification.DEFAULT_SOUND;
-            notification.flags |= Notification.FLAG_AUTO_CANCEL;
-
-            notificationManager.notify(NOTIFICATION_ID_FINISHED, notification);
-
-            stopSelf();
-        }
-    }
-
-
-    /**
-     * Send a notification to the progress bar.
-     */
-    protected void sendNotification() {
-
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        Intent startActivityIntent = new Intent(ExportService.this, ExportService.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, startActivityIntent, 0);
-
-        notification.setLatestEventInfo(this, getResources().getString(R.string.app_name) + ": "+ getApplicationContext().getString(R.string.export_), message , pendingIntent);
-        notificationManager.notify(NOTIFICATION_ID_PROGRESS, notification);
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
+		notification.setLatestEventInfo(this, getResources().getString(R.string.app_name) + ": "
+				+ getApplicationContext().getString(R.string.export_), message, pendingIntent);
+		notification.flags |= Notification.FLAG_AUTO_CANCEL;
+		notificationManager.notify(NOTIFICATION_ID_PROGRESS, notification);
+	}
 
 }
