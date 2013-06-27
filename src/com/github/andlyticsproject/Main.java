@@ -250,20 +250,20 @@ public class Main extends BaseActivity implements OnNavigationListener {
 				return true;
 			}
 
-			Intent importIntent = new Intent(this, ImportActivity.class);
-			importIntent.setAction(Intent.ACTION_VIEW);
-			importIntent.setData(Uri.fromFile(fileToImport));
-			startActivity(importIntent);
+			i = new Intent(this, ImportActivity.class);
+			i.setAction(Intent.ACTION_VIEW);
+			i.setData(Uri.fromFile(fileToImport));
+			startActivity(i);
 			break;
 		case R.id.itemMainmenuExport:
-			Intent exportIntent = new Intent(this, ExportActivity.class);
-			exportIntent.putExtra(ExportActivity.EXTRA_ACCOUNT_NAME, accountName);
-			startActivity(exportIntent);
+			i = new Intent(this, ExportActivity.class);
+			i.putExtra(ExportActivity.EXTRA_ACCOUNT_NAME, accountName);
+			startActivity(i);
 			break;
 		case R.id.itemMainmenuAbout:
 			// launch about activity				
-			Intent aboutIntent = new Intent(this, AboutActivity.class);
-			startActivity(aboutIntent);
+			i = new Intent(this, AboutActivity.class);
+			startActivity(i);
 			//showDialog(DIALOG_ABOUT_ID);
 			break;
 		case R.id.itemMainmenuPreferences:
