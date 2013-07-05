@@ -33,6 +33,8 @@ public class Comment {
 
 	private String appVersion;
 
+    private String appBuild;
+
 	private String device;
 
 	private Comment reply;
@@ -118,6 +120,14 @@ public class Comment {
 
 	public void setUser(String user) {
 		this.user = user;
+	}
+
+	public void setAppBuild(String appBuild) {
+		this.appBuild = appBuild;
+	}
+
+	public String getAppBuild() {
+		return appBuild;
 	}
 
 	public void setAppVersion(String appVersion) {

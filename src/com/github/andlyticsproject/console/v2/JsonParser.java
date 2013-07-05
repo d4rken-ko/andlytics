@@ -452,6 +452,11 @@ public class JsonParser {
 				comment.setAppVersion(version);
 			}
 
+            String build = jsonComment.optString("6");
+            if (build != null && !"".equals(build) && !build.equals("null")) {
+                comment.setAppBuild( build );
+            }
+
 			String commentLang = jsonComment.optJSONObject("5").getString("1");
 			String commentText = jsonComment.optJSONObject("5").getString("3");
 			comment.setLanguage(commentLang);
