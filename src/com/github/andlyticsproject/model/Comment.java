@@ -32,6 +32,8 @@ public class Comment extends Statistic {
 
 	private String appVersion;
 
+    private String appBuild;
+
 	private String device;
 
 	private Comment reply;
@@ -104,6 +106,14 @@ public class Comment extends Statistic {
 
 	public void setUser(String user) {
 		this.user = user;
+	}
+
+	public void setAppBuild(String appBuild) {
+		this.appBuild = appBuild;
+	}
+
+	public String getAppBuild() {
+		return appBuild;
 	}
 
 	public void setAppVersion(String appVersion) {
