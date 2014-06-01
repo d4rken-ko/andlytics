@@ -42,12 +42,21 @@
             android:background="@color/andBorder" />
     </LinearLayout>
 
-    <LinearLayout
+    <!--
+         <LinearLayout
         android:id="@+id/login_input"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.17"
         android:orientation="vertical" />
+    -->
+
+    <ListView
+        android:id="@+id/login_input"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.17" >
+    </ListView>
 
     <RelativeLayout
         android:id="@+id/login_ok_button"
