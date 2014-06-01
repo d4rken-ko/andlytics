@@ -12,23 +12,20 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
-import android.widget.AbsListView;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ListView;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockActivity;
@@ -100,6 +97,7 @@ public class LoginActivity extends SherlockActivity {
 		setSupportProgressBarIndeterminateVisibility(false);
 		mAccountsList = (ListView) findViewById(R.id.login_input);
 		mAccountsList.setOnItemClickListener(mItemClickListener);
+		mAccountsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
 		okButton = findViewById(R.id.login_ok_button);
 		okButton.setClickable(true);
@@ -146,11 +144,39 @@ public class LoginActivity extends SherlockActivity {
 
 	private AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
       @Override
-      public void onItemClick(AdapterView<?> adapter, View v, int position,
-            long arg3){
-    	  Log.d(TAG, "item clicked");
+      public void onItemClick(AdapterView<?> adapter, View rowView, int position,
+            long id) {
+          boolean isChecked = mAccountsList.isItemChecked(position);
+
+    	  Object possiblyViewHolder = rowView.getTag();
+    	  ViewHolder holder = null;
+    	  if(possiblyViewHolder instanceof ViewHolder) {
+    		  holder = (ViewHolder) possiblyViewHolder;
+    		  holder.mSelected.setChecked(isChecked);
+    	  } else
+    		  Log.i(TAG, "not instance of viewholder");
+
+          onAccountSelected(isChecked, position);
       }
    };
+   
+   private void onAccountSelected(boolean isChecked, int position) {
+
+ 	  DeveloperAccount account = developerAccounts.get(position);
+		if (isChecked) {
+			account.activate();
+		} else {
+			account.hide();
+		}
+
+		if (manageAccountsMode && account.equals(selectedAccount)) {
+			// If they remove the current account, then stop them
+			// going back
+			blockGoingBack = account.isHidden();
+		}
+
+		okButton.setEnabled(isAtLeastOneAccountEnabled());
+   }
 	
 	@Override
 	protected void onResume() {
@@ -333,9 +359,28 @@ public class LoginActivity extends SherlockActivity {
 		finish();
 	}
 	
+	private CompoundButton.OnCheckedChangeListener mCheckedChangeListener = new OnCheckedChangeListener() {
+		@Override
+		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+			if(buttonView instanceof CheckBox) {
+				CheckBox checkBox = (CheckBox) buttonView;
+				
+				Object possiblyViewHolder = checkBox.getTag();
+	        	ViewHolder holder = null;
+	        	if(possiblyViewHolder instanceof ViewHolder) {
+	        		holder = (ViewHolder) possiblyViewHolder;
+		            onAccountSelected(isChecked, holder.mPosition);
+	        	} else
+	        		Log.i(TAG, "not an instance of viewholder");
+			} else
+				Log.w(TAG, "Expect the clicked view to be instance of " + CheckBox.class.getSimpleName() + " Found: " + buttonView);
+		}
+	};
+	
 	private static class ViewHolder {
 		TextView mAccountName;
 		CheckBox mSelected;
+		int mPosition;
 	}
 
 	private class AccountAdaper extends ArrayAdapter<DeveloperAccount> {
@@ -369,33 +414,17 @@ public class LoginActivity extends SherlockActivity {
 			
 			DeveloperAccount account = accounts.get(position);
 			
+			// save position so as to use it later
+			holder.mPosition = position;
+			
 			// show account name
 			holder.mAccountName.setText(account.getName());
 			
 			// show select/unselect checkbox
 			holder.mSelected.setChecked(!account.isHidden());
-			holder.mSelected.setTag(account);
-			holder.mSelected.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-				@Override
-				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					DeveloperAccount account = (DeveloperAccount) ((View) buttonView.getParent()).getTag();
-					if (isChecked) {
-						account.activate();
-					} else {
-						account.hide();
-					}
-
-					if (manageAccountsMode && account.equals(selectedAccount)) {
-						// If they remove the current account, then stop them
-						// going back
-						blockGoingBack = account.isHidden();
-					}
-
-					okButton.setEnabled(isAtLeastOneAccountEnabled());
-				}
-			});
+			holder.mSelected.setTag(holder);
+			holder.mSelected.setOnCheckedChangeListener(mCheckedChangeListener);
 			
-			rowView.setTag(account);
 			return rowView;
 		}
 
