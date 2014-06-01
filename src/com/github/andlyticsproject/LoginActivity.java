@@ -15,7 +15,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -131,6 +130,9 @@ public class LoginActivity extends SherlockActivity {
 							// Go to the first non hidden account
 							for (DeveloperAccount account : developerAccounts) {
 								if (account.isVisible()) {
+									// If we are using only the first selected item,
+									// should we not use single choice listview?
+									// if agreeable, put a TODO: here.
 									redirectToMain(account.getName(), account.getDeveloperId());
 									break;
 								}
@@ -258,33 +260,6 @@ public class LoginActivity extends SherlockActivity {
 				syncHandler.setAutosyncPeriod(googleAccounts[i].name,
 						Preferences.getAutosyncPeriod(this));
 			}
-
-			View accountItem = getLayoutInflater().inflate(R.layout.login_list_item, null);
-			TextView accountName = (TextView) accountItem.findViewById(R.id.login_list_item_text);
-			accountName.setText(googleAccounts[i].name);
-			accountItem.setTag(developerAccount);
-			CheckBox enabled = (CheckBox) accountItem.findViewById(R.id.login_list_item_enabled);
-			enabled.setChecked(!developerAccount.isHidden());
-			enabled.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-				@Override
-				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					DeveloperAccount account = (DeveloperAccount) ((View) buttonView.getParent())
-							.getTag();
-					if (isChecked) {
-						account.activate();
-					} else {
-						account.hide();
-					}
-
-					if (manageAccountsMode && account.equals(selectedAccount)) {
-						// If they remove the current account, then stop them
-						// going back
-						blockGoingBack = account.isHidden();
-					}
-
-					okButton.setEnabled(isAtLeastOneAccountEnabled());
-				}
-			});
 			
 		}	// end for
 		
