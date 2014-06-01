@@ -21,6 +21,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -97,6 +99,7 @@ public class LoginActivity extends SherlockActivity {
 		setContentView(R.layout.login);
 		setSupportProgressBarIndeterminateVisibility(false);
 		mAccountsList = (ListView) findViewById(R.id.login_input);
+		mAccountsList.setOnItemClickListener(mItemClickListener);
 
 		okButton = findViewById(R.id.login_ok_button);
 		okButton.setClickable(true);
@@ -141,6 +144,14 @@ public class LoginActivity extends SherlockActivity {
 		});
 	}
 
+	private AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
+      @Override
+      public void onItemClick(AdapterView<?> adapter, View v, int position,
+            long arg3){
+    	  Log.d(TAG, "item clicked");
+      }
+   };
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
