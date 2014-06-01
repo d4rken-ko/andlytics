@@ -199,6 +199,7 @@ public class LoginActivity extends SherlockActivity {
 			if (idx != -1) {
 				developerAccount = dbAccounts.get(idx);
 			}
+			
 			developerAccounts.add(developerAccount);
 			
 			Log.i(TAG, "# accounts.get(position).getName(): " + developerAccount.getName());
