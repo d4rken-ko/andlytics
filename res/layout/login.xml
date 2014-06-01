@@ -1,68 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@color/andBackground"
     android:orientation="vertical" >
 
-    <ScrollView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_above="@+id/login_ok_button" >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="80dp" >
+
+        <TextView
+            style="@style/MainTableText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="10dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:text="@string/account_required"
+            android:textStyle="bold" />
+
+        <TextView
+            style="@style/MainTableText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:text="@string/account_choose" />
+
+        <View
+            android:id="@+id/main_app_buttonbarSpacer"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/andBorder"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp" />
 
         <LinearLayout
-            android:layout_width="fill_parent"
+            android:id="@+id/login_input"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="80dp" >
-
-            <TextView
-                style="@style/MainTableText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:layout_marginTop="10dp"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:text="@string/account_required"
-                android:textStyle="bold" />
-
-            <TextView
-                style="@style/MainTableText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:layout_marginTop="5dp"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:text="@string/account_choose" />
-
-            <View
-                android:id="@+id/main_app_buttonbarSpacer"
-                android:layout_width="fill_parent"
-                android:layout_height="2dp"
-                android:layout_marginBottom="10dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/andBorder"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp" />
-
-            <!-- TODO Replace this with a list view! -->
-
-            <LinearLayout
-                android:id="@+id/login_input"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" >
-            </LinearLayout>
+            android:orientation="vertical" >
         </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
 
     <RelativeLayout
         android:id="@+id/login_ok_button"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="5dp"

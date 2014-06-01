@@ -200,6 +200,8 @@ public class LoginActivity extends SherlockActivity {
 				developerAccount = dbAccounts.get(idx);
 			}
 			developerAccounts.add(developerAccount);
+			
+			Log.i(TAG, "# accounts.get(position).getName(): " + developerAccount.getName());
 
 			// Setup auto sync
 			// only do this when managing accounts, otherwise sync may start
