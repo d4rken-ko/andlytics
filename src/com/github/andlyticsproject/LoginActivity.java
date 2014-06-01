@@ -65,8 +65,6 @@ public class LoginActivity extends SherlockActivity {
 	private DeveloperAccountManager developerAccountManager;
 	private AutosyncHandler syncHandler;
 
-	// TODO Clean this code and res/layout/login.xml up e.g. using a ListView
-	// instead of a LinearLayout
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
@@ -77,10 +75,8 @@ public class LoginActivity extends SherlockActivity {
 		syncHandler = new AutosyncHandler();
 
 		// When called from accounts action item in Main, this flag is passed to
-		// indicate
-		// that LoginActivity should not auto login as we are managing the
-		// accounts,
-		// rather than performing the initial login
+		// indicate that LoginActivity should not auto login as we are managing the
+		// accounts, rather than performing the initial login
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
 			manageAccountsMode = extras.getBoolean(LoginActivity.EXTRA_MANAGE_ACCOUNTS_MODE);
@@ -144,6 +140,9 @@ public class LoginActivity extends SherlockActivity {
 		});
 	}
 
+	/***
+	 * Fires when the listitem is clicked
+	 ****/
 	private AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> adapter, View rowView, int position,
