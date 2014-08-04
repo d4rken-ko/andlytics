@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Currency;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,6 +38,7 @@ import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import com.github.andlyticsproject.Preferences.StatsMode;
@@ -48,7 +50,7 @@ import com.github.andlyticsproject.model.AppStats;
 import com.github.andlyticsproject.model.Revenue;
 import com.github.andlyticsproject.model.RevenueSummary;
 
-public class MainListAdapter extends BaseAdapter {
+public class MainListAdapter extends BaseAdapter implements SectionIndexer {
 
 	// initialized only once based on AdMob revenue currency
 	private NumberFormat numberFormat = null;
@@ -878,6 +880,52 @@ public class MainListAdapter extends BaseAdapter {
 		protected void onProgressUpdate(LayoutParams... values) {
 			view.setLayoutParams(values[0]);
 		}
+	}
+
+	/** fastscroll & indexer **/
+
+	private Object[] reg;							// A,B,C
+	private LinkedHashMap<Integer, Integer> sec; 	// 1>1,2>5 (getPositionForSection)
+	private LinkedHashMap<Integer, Integer> pos;	// 1>1,2>1 (getSectionForPosition)
+
+	@Override
+	public Object[] getSections() {
+		return reg;
+	}
+
+	@Override
+	public int getPositionForSection(int section) {
+		return sec.get(section<0?0:section);
+	}
+
+	@Override
+	public int getSectionForPosition(int position) {
+		try {
+			return pos.get(position);
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+
+	private void genIndexer() {
+		ArrayList<String> register = new ArrayList<String>();
+		sec = new LinkedHashMap<Integer, Integer>();
+		pos = new LinkedHashMap<Integer, Integer>();
+
+		int s=-1;
+		for (int p=1; p<appInfos.size(); p++) {
+			if (register.add( appInfos.get(p).getName().substring(0, 1).toUpperCase(Locale.getDefault()) ))
+				sec.put(++s, p);
+			pos.put(p, s);
+		}
+		reg = register.toArray();
+
+	}
+
+	@Override
+	public void notifyDataSetChanged() {
+		super.notifyDataSetChanged();
+		genIndexer();
 	}
 
 }

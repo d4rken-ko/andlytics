@@ -167,6 +167,7 @@ public class Main extends BaseActivity implements OnNavigationListener {
 		adapter = new MainListAdapter(this, accountName, currentStatsMode);
 		mainListView.setAdapter(adapter);
 		mainViewSwitcher = (ViewSwitcher) findViewById(R.id.main_viewswitcher);
+		mainListView.setFastScrollEnabled(true);
 
 		// status & progress bar
 		statusText = (TextView) findViewById(R.id.main_app_status_line);
@@ -349,7 +350,7 @@ public class Main extends BaseActivity implements OnNavigationListener {
 				Intent importIntent = new Intent(this, ImportActivity.class);
 				importIntent.setAction(Intent.ACTION_VIEW);
 				Uri uri = data.getData();
-				importIntent.setData(data.getData());
+				importIntent.setData(uri);
 				startActivity(importIntent);
 			} else {
 				Toast.makeText(
