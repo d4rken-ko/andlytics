@@ -4,10 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.BaseActivity;
 import com.github.andlyticsproject.Preferences;
 import com.github.andlyticsproject.R;
@@ -50,19 +50,19 @@ public class BaseDetailsActivity extends BaseActivity {
 
 	/**
 	 * Called if item in option menu is selected.
-	 * 
+	 *
 	 * @param item The chosen menu item
 	 * @return boolean true/false
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case android.R.id.home:
-			finish();
-			overridePendingTransition(R.anim.activity_prev_in, R.anim.activity_prev_out);
-			return true;
-		default:
-			return (super.onOptionsItemSelected(item));
+			case android.R.id.home:
+				finish();
+				overridePendingTransition(R.anim.activity_prev_in, R.anim.activity_prev_out);
+				return true;
+			default:
+				return (super.onOptionsItemSelected(item));
 		}
 	}
 

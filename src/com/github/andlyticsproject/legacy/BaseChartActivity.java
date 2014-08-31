@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.text.Html;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -15,8 +18,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.BaseChartListAdapter;
 import com.github.andlyticsproject.ChartSwitcher;
 import com.github.andlyticsproject.Preferences;
@@ -33,18 +34,16 @@ public abstract class BaseChartActivity extends BaseDetailsActivity implements
 		ViewSwitcherListener, ChartSwitcher {
 
 	static final String SELECTED_CHART_POISTION = "selected_chart_position";
-
+	protected String timetext;
+	BaseChartListAdapter myAdapter;
 	private ChartGalleryAdapter chartGalleryAdapter;
 	private ChartGallery chartGallery;
 	private ListView dataList;
 	private TextView timeframeText;
-	protected String timetext;
 	private Timeframe currentTimeFrame;
 	private ViewSwitcher3D listViewSwitcher;
 	private ViewGroup dataframe;
 	private ViewGroup chartframe;
-
-	BaseChartListAdapter myAdapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -113,30 +112,31 @@ public abstract class BaseChartActivity extends BaseDetailsActivity implements
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
-		getSupportMenuInflater().inflate(R.menu.charts_menu, menu);
+		getMenuInflater().inflate(R.menu.charts_menu, menu);
 		MenuItem activeTimeFrame = null;
 		switch (currentTimeFrame) {
-		case LAST_SEVEN_DAYS:
-			activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframe7);
-			break;
-		case LAST_THIRTY_DAYS:
-			activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframe30);
-			break;
-		case LAST_NINETY_DAYS:
-			activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframe90);
-			break;
-		case UNLIMITED:
-			activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframeUnlimited);
-			break;
-		case MONTH_TO_DATE:
-			activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframeMonthToDate);
-			break;
+			case LAST_SEVEN_DAYS:
+				activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframe7);
+				break;
+			case LAST_THIRTY_DAYS:
+				activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframe30);
+				break;
+			case LAST_NINETY_DAYS:
+				activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframe90);
+				break;
+			case UNLIMITED:
+				activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframeUnlimited);
+				break;
+			case MONTH_TO_DATE:
+				activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframeMonthToDate);
+				break;
 		}
-		activeTimeFrame.setChecked(true);
+		if (activeTimeFrame != null) {
+			activeTimeFrame.setChecked(true);
+		}
 
 		if (isRefreshing()) {
-			menu.findItem(R.id.itemChartsmenuRefresh).setActionView(
-					R.layout.action_bar_indeterminate_progress);
+			MenuItemCompat.setActionView(menu.findItem(R.id.itemChartsmenuRefresh), R.layout.action_bar_indeterminate_progress);
 		}
 
 		return true;
@@ -144,53 +144,52 @@ public abstract class BaseChartActivity extends BaseDetailsActivity implements
 
 	/**
 	 * Called if item in option menu is selected.
-	 * 
-	 * @param item
-	 * The chosen menu item
+	 *
+	 * @param item The chosen menu item
 	 * @return boolean true/false
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.itemChartsmenuRefresh:
-			setChartIgnoreCallLayouts(true);
-			executeLoadData(currentTimeFrame);
-			return true;
-		case R.id.itemChartsmenuToggle:
-			toggleChartData(item);
-			return true;
-		case R.id.itemChartsmenuTimeframe7:
-			currentTimeFrame = Timeframe.LAST_SEVEN_DAYS;
-			executeLoadData(currentTimeFrame);
-			Preferences.saveChartTimeframe(Timeframe.LAST_SEVEN_DAYS, BaseChartActivity.this);
-			item.setChecked(true);
-			return true;
-		case R.id.itemChartsmenuTimeframe30:
-			currentTimeFrame = Timeframe.LAST_THIRTY_DAYS;
-			executeLoadData(currentTimeFrame);
-			Preferences.saveChartTimeframe(Timeframe.LAST_THIRTY_DAYS, BaseChartActivity.this);
-			item.setChecked(true);
-			return true;
-		case R.id.itemChartsmenuTimeframe90:
-			currentTimeFrame = Timeframe.LAST_NINETY_DAYS;
-			executeLoadData(currentTimeFrame);
-			Preferences.saveChartTimeframe(Timeframe.LAST_NINETY_DAYS, BaseChartActivity.this);
-			item.setChecked(true);
-			return true;
-		case R.id.itemChartsmenuTimeframeUnlimited:
-			currentTimeFrame = Timeframe.UNLIMITED;
-			executeLoadData(currentTimeFrame);
-			Preferences.saveChartTimeframe(Timeframe.UNLIMITED, BaseChartActivity.this);
-			item.setChecked(true);
-			return true;
-		case R.id.itemChartsmenuTimeframeMonthToDate:
-			currentTimeFrame = Timeframe.MONTH_TO_DATE;
-			executeLoadData(currentTimeFrame);
-			Preferences.saveChartTimeframe(Timeframe.MONTH_TO_DATE, BaseChartActivity.this);
-			item.setChecked(true);
-			return true;
-		default:
-			return (super.onOptionsItemSelected(item));
+			case R.id.itemChartsmenuRefresh:
+				setChartIgnoreCallLayouts(true);
+				executeLoadData(currentTimeFrame);
+				return true;
+			case R.id.itemChartsmenuToggle:
+				toggleChartData(item);
+				return true;
+			case R.id.itemChartsmenuTimeframe7:
+				currentTimeFrame = Timeframe.LAST_SEVEN_DAYS;
+				executeLoadData(currentTimeFrame);
+				Preferences.saveChartTimeframe(Timeframe.LAST_SEVEN_DAYS, BaseChartActivity.this);
+				item.setChecked(true);
+				return true;
+			case R.id.itemChartsmenuTimeframe30:
+				currentTimeFrame = Timeframe.LAST_THIRTY_DAYS;
+				executeLoadData(currentTimeFrame);
+				Preferences.saveChartTimeframe(Timeframe.LAST_THIRTY_DAYS, BaseChartActivity.this);
+				item.setChecked(true);
+				return true;
+			case R.id.itemChartsmenuTimeframe90:
+				currentTimeFrame = Timeframe.LAST_NINETY_DAYS;
+				executeLoadData(currentTimeFrame);
+				Preferences.saveChartTimeframe(Timeframe.LAST_NINETY_DAYS, BaseChartActivity.this);
+				item.setChecked(true);
+				return true;
+			case R.id.itemChartsmenuTimeframeUnlimited:
+				currentTimeFrame = Timeframe.UNLIMITED;
+				executeLoadData(currentTimeFrame);
+				Preferences.saveChartTimeframe(Timeframe.UNLIMITED, BaseChartActivity.this);
+				item.setChecked(true);
+				return true;
+			case R.id.itemChartsmenuTimeframeMonthToDate:
+				currentTimeFrame = Timeframe.MONTH_TO_DATE;
+				executeLoadData(currentTimeFrame);
+				Preferences.saveChartTimeframe(Timeframe.MONTH_TO_DATE, BaseChartActivity.this);
+				item.setChecked(true);
+				return true;
+			default:
+				return (super.onOptionsItemSelected(item));
 		}
 	}
 
@@ -211,7 +210,7 @@ public abstract class BaseChartActivity extends BaseDetailsActivity implements
 
 	/**
 	 * Called when chart is selected
-	 * 
+	 *
 	 * @param page
 	 * @param column
 	 */

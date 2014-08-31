@@ -3,7 +3,7 @@ package com.github.andlyticsproject.console;
 public class DevConsoleException extends RuntimeException {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 4251549102914653087L;
 

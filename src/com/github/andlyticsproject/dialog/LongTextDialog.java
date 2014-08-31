@@ -9,10 +9,9 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockDialogFragment;
 import com.github.andlyticsproject.R;
 
-public class LongTextDialog extends SherlockDialogFragment {
+public class LongTextDialog extends DialogFragment {
 	public LongTextDialog() {
 		setStyle(DialogFragment.STYLE_NO_FRAME, R.style.Dialog);
 	}

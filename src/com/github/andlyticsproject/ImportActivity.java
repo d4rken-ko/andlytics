@@ -7,10 +7,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
@@ -18,8 +20,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Window;
 import com.github.andlyticsproject.io.ImportService;
 import com.github.andlyticsproject.io.ServiceException;
 import com.github.andlyticsproject.io.StatsCsvReaderWriter;
@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ImportActivity extends SherlockFragmentActivity {
+public class ImportActivity extends ActionBarActivity {
 
 	private static final String TAG = ImportActivity.class.getSimpleName();
 
@@ -58,10 +58,10 @@ public class ImportActivity extends SherlockFragmentActivity {
 	public void onCreate(Bundle state) {
 		super.onCreate(state);
 
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setContentView(R.layout.import_stats);
-		setProgressBarIndeterminateVisibility(false);
+		setSupportProgressBarIndeterminateVisibility(false);
 
 		layoutInflater = getLayoutInflater();
 
@@ -217,7 +217,7 @@ public class ImportActivity extends SherlockFragmentActivity {
 
 		@Override
 		protected void onPreExecute() {
-			activity.setProgressBarIndeterminateVisibility(true);
+			activity.setSupportProgressBarIndeterminateVisibility(true);
 		}
 
 		@Override
@@ -271,7 +271,7 @@ public class ImportActivity extends SherlockFragmentActivity {
 				return;
 			}
 
-			activity.setProgressBarIndeterminateVisibility(false);
+			activity.setSupportProgressBarIndeterminateVisibility(false);
 
 			if (!activity.isFinishing()) {
 				if (result) {

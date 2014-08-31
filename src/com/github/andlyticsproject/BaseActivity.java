@@ -1,13 +1,12 @@
 package com.github.andlyticsproject;
 
-import org.acra.ACRA;
-
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -15,7 +14,6 @@ import android.view.animation.LinearInterpolator;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.github.andlyticsproject.admob.AdmobAccountRemovedException;
 import com.github.andlyticsproject.admob.AdmobAskForPasswordException;
 import com.github.andlyticsproject.admob.AdmobGenericException;
@@ -33,7 +31,9 @@ import com.github.andlyticsproject.legacy.ChartActivity;
 import com.github.andlyticsproject.util.Utils;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
-public class BaseActivity extends SherlockFragmentActivity {
+import org.acra.ACRA;
+
+public class BaseActivity extends ActionBarActivity {
 
 	private static final String TAG = BaseActivity.class.getSimpleName();
 

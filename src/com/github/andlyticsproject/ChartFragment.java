@@ -8,16 +8,18 @@ import java.util.List;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.Preferences.Timeframe;
 import com.github.andlyticsproject.chart.Chart.ChartSet;
 import com.github.andlyticsproject.model.AppStatsSummary;
@@ -91,8 +93,8 @@ public abstract class ChartFragment<T extends Statistic> extends ChartFragmentBa
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		getSherlockActivity().getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		getSherlockActivity().getSupportActionBar().setTitle(getTitle());
+		((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(getTitle());
 
 		Bundle b = getArguments();
 		if (b != null) {
@@ -252,11 +254,12 @@ public abstract class ChartFragment<T extends Statistic> extends ChartFragmentBa
 			activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframeMonthToDate);
 			break;
 		}
-		activeTimeFrame.setChecked(true);
+		if (activeTimeFrame != null) {
+			activeTimeFrame.setChecked(true);
+		}
 
 		if (statsActivity.isRefreshing()) {
-			menu.findItem(R.id.itemChartsmenuRefresh).setActionView(
-					R.layout.action_bar_indeterminate_progress);
+			MenuItemCompat.setActionView(menu.findItem(R.id.itemChartsmenuRefresh), R.layout.action_bar_indeterminate_progress);
 		}
 	}
 

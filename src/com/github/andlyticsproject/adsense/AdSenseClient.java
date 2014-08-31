@@ -55,7 +55,7 @@ public class AdSenseClient {
 	}
 
 	public static void foregroundSyncStats(Context context, String admobAccount,
-			List<String> adUnits) throws Exception {
+										   List<String> adUnits) throws Exception {
 		AdSense adsense = createForegroundSyncClient(context, admobAccount);
 		syncStats(context, adsense, adUnits);
 	}
@@ -71,7 +71,7 @@ public class AdSenseClient {
 	}
 
 	public static void backgroundSyncStats(Context context, String admobAccount,
-			List<String> adUnits, Bundle extras, String authority, Bundle syncBundle)
+										   List<String> adUnits, Bundle extras, String authority, Bundle syncBundle)
 			throws Exception {
 		AdSense adsense = createBackgroundSyncClient(context, admobAccount, extras, authority,
 				syncBundle);
@@ -125,7 +125,7 @@ public class AdSenseClient {
 			}
 		}
 
-		return new Calendar[] { startDateCal, endDateCal };
+		return new Calendar[]{startDateCal, endDateCal};
 	}
 
 	private static String getClientId(AdSense adsense) throws IOException {
@@ -163,7 +163,7 @@ public class AdSenseClient {
 	}
 
 	private static AdSense createBackgroundSyncClient(Context context, String admobAccount,
-			Bundle extras, String authority, Bundle syncBundle) {
+													  Bundle extras, String authority, Bundle syncBundle) {
 		BackgroundGoogleAccountCredential credential = BackgroundGoogleAccountCredential
 				.usingOAuth2(context, Collections.singleton(AdSenseScopes.ADSENSE_READONLY),
 						extras, authority, syncBundle);
@@ -174,7 +174,7 @@ public class AdSenseClient {
 	}
 
 	private static List<AdmobStats> generateReport(AdSense adsense, String adClientId,
-			Date startDate, Date endDate) throws IOException, ParseException {
+												   Date startDate, Date endDate) throws IOException, ParseException {
 		String startDateStr = DATE_FORMATTER.format(startDate);
 		String endDateStr = DATE_FORMATTER.format(endDate);
 		Generate request = adsense.reports().generate(startDateStr, endDateStr);

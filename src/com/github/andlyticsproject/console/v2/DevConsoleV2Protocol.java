@@ -78,6 +78,11 @@ public class DevConsoleV2Protocol {
 		this.sessionCredentials = sessionCredentials;
 	}
 
+	private static void saveDebugJson(String json) {
+		FileUtils.tryWriteToDebugDir(
+				String.format("console_reply_%d.json", System.currentTimeMillis()), json);
+	}
+
 	SessionCredentials getSessionCredentials() {
 		return sessionCredentials;
 	}
@@ -170,11 +175,6 @@ public class DevConsoleV2Protocol {
 		}
 	}
 
-	private static void saveDebugJson(String json) {
-		FileUtils.tryWriteToDebugDir(
-				String.format("console_reply_%d.json", System.currentTimeMillis()), json);
-	}
-
 	String createFetchAppInfoRequest(String packageName) {
 		checkState();
 
@@ -215,7 +215,7 @@ public class DevConsoleV2Protocol {
 	}
 
 	String createFetchCommentsRequest(String packageName, int start, int pageSize,
-			String displayLocale) {
+									  String displayLocale) {
 		checkState();
 
 		return String.format(GET_REVIEWS_TEMPLATE, packageName, start, pageSize, displayLocale,

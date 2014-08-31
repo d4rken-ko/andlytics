@@ -8,12 +8,11 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.ActionBar.Tab;
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.console.v2.DevConsoleRegistry;
 import com.github.andlyticsproject.console.v2.DevConsoleV2;
 import com.github.andlyticsproject.db.AndlyticsDb;
@@ -61,7 +60,7 @@ public class DetailsActivity extends BaseActivity implements DetailedStatsActivi
 			fragment = activity.getSupportFragmentManager().findFragmentByTag(tag);
 		}
 
-		public void onTabSelected(Tab tab, FragmentTransaction ft) {
+		public void onTabSelected(ActionBar.Tab tab, FragmentTransaction ft) {
 			if (fragment == null) {
 				fragment = Fragment.instantiate(activity, clazz.getName());
 				ft.add(android.R.id.content, fragment, tag);
@@ -75,13 +74,13 @@ public class DetailsActivity extends BaseActivity implements DetailedStatsActivi
 			}
 		}
 
-		public void onTabUnselected(Tab tab, FragmentTransaction ft) {
+		public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction ft) {
 			if (fragment != null) {
 				ft.detach(fragment);
 			}
 		}
 
-		public void onTabReselected(Tab tab, FragmentTransaction ft) {
+		public void onTabReselected(ActionBar.Tab tab, FragmentTransaction ft) {
 		}
 	}
 
@@ -105,7 +104,7 @@ public class DetailsActivity extends BaseActivity implements DetailedStatsActivi
 		
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
-		Tab tab = actionBar
+		ActionBar.Tab tab = actionBar
 				.newTab()
 				.setText(R.string.comments)
 				.setTabListener(

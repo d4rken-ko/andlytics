@@ -7,9 +7,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 public class DevConsoleRegistry {
 
-	private Map<String, DevConsoleV2> registry = new HashMap<String, DevConsoleV2>();
-
 	private static DevConsoleRegistry instance = new DevConsoleRegistry();
+	private Map<String, DevConsoleV2> registry = new HashMap<String, DevConsoleV2>();
 
 	private DevConsoleRegistry() {
 	}

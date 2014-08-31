@@ -22,7 +22,7 @@ public class SessionCredentials {
 	private List<String> whitelistedFeatures = new ArrayList<String>();
 
 	public SessionCredentials(String accountName, String xsrfToken,
-			DeveloperConsoleAccount[] consoleAccounts) {
+							  DeveloperConsoleAccount[] consoleAccounts) {
 		this.accountName = accountName;
 		this.xsrfToken = xsrfToken;
 		this.consoleAccounts = consoleAccounts.clone();

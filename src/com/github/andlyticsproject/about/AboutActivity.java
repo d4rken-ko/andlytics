@@ -4,16 +4,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
-
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.ActionBar.Tab;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.R;
 
-public class AboutActivity extends SherlockFragmentActivity implements
+public class AboutActivity extends ActionBarActivity implements
 		ActionBar.TabListener {
 	private static final String BUNDLE_KEY_TABINDEX = "tabindex";
 
@@ -52,12 +50,12 @@ public class AboutActivity extends SherlockFragmentActivity implements
 	}
 
 	@Override
-	public void onTabReselected(Tab tab, FragmentTransaction transaction) {
+	public void onTabReselected(ActionBar.Tab tab, FragmentTransaction transaction) {
 		Log.i("Tab Reselected", tab.getText().toString());
 	}
 
 	@Override
-	public void onTabSelected(Tab tab, FragmentTransaction transaction) {
+	public void onTabSelected(ActionBar.Tab tab, FragmentTransaction transaction) {
 		if (0 == tab.getPosition()) {
 			AboutFragment fragment = new AboutFragment();
 			transaction.replace(android.R.id.content, fragment);
@@ -68,7 +66,7 @@ public class AboutActivity extends SherlockFragmentActivity implements
 	}
 
 	@Override
-	public void onTabUnselected(Tab tab, FragmentTransaction transaction) {
+	public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction transaction) {
 		Log.i("Tab Unselected", tab.getText().toString());
 	}
 	

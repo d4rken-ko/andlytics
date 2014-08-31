@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -15,6 +16,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,7 +32,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.github.andlyticsproject.cache.AppIconInMemoryCache;
 import com.github.andlyticsproject.io.ExportService;
 import com.github.andlyticsproject.io.StatsCsvReaderWriter;
@@ -38,7 +39,7 @@ import com.github.andlyticsproject.model.AppInfo;
 import com.github.andlyticsproject.util.DetachableAsyncTask;
 import com.github.andlyticsproject.util.Utils;
 
-public class ExportActivity extends SherlockFragmentActivity {
+public class ExportActivity extends ActionBarActivity {
 
 	private static final String TAG = ExportActivity.class.getSimpleName();
 
@@ -67,10 +68,10 @@ public class ExportActivity extends SherlockFragmentActivity {
 	public void onCreate(Bundle state) {
 		super.onCreate(state);
 
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setContentView(R.layout.export_stats);
-		setProgressBarIndeterminateVisibility(false);
+		setSupportProgressBarIndeterminateVisibility(false);
 
 		layoutInflater = getLayoutInflater();
 
@@ -240,7 +241,7 @@ public class ExportActivity extends SherlockFragmentActivity {
 				return;
 			}
 
-			activity.setProgressBarIndeterminateVisibility(false);
+			activity.setSupportProgressBarIndeterminateVisibility(false);
 
 			if (!activity.isFinishing()) {
 				if (result != null) {
