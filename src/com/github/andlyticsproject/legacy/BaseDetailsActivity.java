@@ -50,19 +50,19 @@ public class BaseDetailsActivity extends BaseActivity {
 
 	/**
 	 * Called if item in option menu is selected.
-	 * 
+	 *
 	 * @param item The chosen menu item
 	 * @return boolean true/false
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case android.R.id.home:
-			finish();
-			overridePendingTransition(R.anim.activity_prev_in, R.anim.activity_prev_out);
-			return true;
-		default:
-			return (super.onOptionsItemSelected(item));
+			case android.R.id.home:
+				finish();
+				overridePendingTransition(R.anim.activity_prev_in, R.anim.activity_prev_out);
+				return true;
+			default:
+				return (super.onOptionsItemSelected(item));
 		}
 	}
 

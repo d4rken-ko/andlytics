@@ -26,9 +26,8 @@ import com.github.andlyticsproject.util.Utils;
 
 public class ChartActivity extends BaseChartActivity {
 
-	private static String TAG = ChartActivity.class.getSimpleName();
 	private static final boolean DEBUG = false;
-
+	private static String TAG = ChartActivity.class.getSimpleName();
 	private ListView historyList;
 	private ChartListAdapter historyListAdapter;
 	private TextView historyListFooter;
@@ -39,6 +38,16 @@ public class ChartActivity extends BaseChartActivity {
 	private Boolean smoothEnabled;
 
 	private LoadChartData loadChartData;
+
+	private static boolean applySmoothedValues(List<AppStats> statsForApp) {
+		for (AppStats appInfo : statsForApp) {
+			if (appInfo.isSmoothingApplied()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	@Override
 	protected void executeLoadData(Timeframe timeFrame) {
@@ -152,87 +161,12 @@ public class ChartActivity extends BaseChartActivity {
 		executeLoadDataDefault();
 	}
 
-	public void setCurrentChartSet(ChartSet currentChartSet) {
-		this.currentChartSet = currentChartSet;
-	}
-
 	public ChartSet getCurrentChartSet() {
 		return currentChartSet;
 	}
 
-	private static class LoadChartData extends
-			DetachableAsyncTask<Timeframe, Void, Boolean, ChartActivity> {
-
-		private ContentAdapter db;
-
-		LoadChartData(ChartActivity activity) {
-			super(activity);
-			db = ContentAdapter.getInstance(activity.getApplication());
-		}
-
-		private AppStatsSummary statsForApp;
-
-		@Override
-		protected void onPreExecute() {
-			if (activity == null) {
-				return;
-			}
-
-			activity.refreshStarted();
-		}
-
-		@Override
-		protected Boolean doInBackground(Timeframe... params) {
-			if (activity == null) {
-				return null;
-			}
-
-			if (activity.dataUpdateRequested || activity.historyListAdapter.getStats() == null
-					|| activity.historyListAdapter.isEmpty()) {
-				statsForApp = db.getStatsForApp(activity.packageName, params[0],
-						activity.smoothEnabled);
-
-				if (DEBUG) {
-					Log.d(TAG,
-							"statsForApp::highestRatingChange "
-									+ statsForApp.getHighestRatingChange());
-					Log.d(TAG,
-							"statsForApp::lowestRatingChanage "
-									+ statsForApp.getLowestRatingChange());
-					Log.d(TAG, "statsForApp::appStats " + statsForApp.getStats().size());
-					Log.d(TAG, "statsForApps::overall " + statsForApp.getOverallStats());
-				}
-
-				activity.dataUpdateRequested = false;
-
-				return true;
-			}
-
-			return false;
-		}
-
-		@Override
-		protected void onPostExecute(Boolean result) {
-			if (activity == null) {
-				return;
-			}
-
-			if (result && statsForApp != null) {
-				activity.updateView(statsForApp);
-			}
-			activity.refreshFinished();
-		}
-
-	}
-
-	private static boolean applySmoothedValues(List<AppStats> statsForApp) {
-		for (AppStats appInfo : statsForApp) {
-			if (appInfo.isSmoothingApplied()) {
-				return true;
-			}
-		}
-
-		return false;
+	public void setCurrentChartSet(ChartSet currentChartSet) {
+		this.currentChartSet = currentChartSet;
 	}
 
 	private void updateView(AppStatsSummary appStatsList) {
@@ -297,6 +231,70 @@ public class ChartActivity extends BaseChartActivity {
 		if (page != currentChartSet.ordinal()) {
 			currentChartSet = ChartSet.values()[page];
 			updateTabbarButtons();
+		}
+
+	}
+
+	private static class LoadChartData extends
+			DetachableAsyncTask<Timeframe, Void, Boolean, ChartActivity> {
+
+		private ContentAdapter db;
+		private AppStatsSummary statsForApp;
+
+		LoadChartData(ChartActivity activity) {
+			super(activity);
+			db = ContentAdapter.getInstance(activity.getApplication());
+		}
+
+		@Override
+		protected void onPreExecute() {
+			if (activity == null) {
+				return;
+			}
+
+			activity.refreshStarted();
+		}
+
+		@Override
+		protected Boolean doInBackground(Timeframe... params) {
+			if (activity == null) {
+				return null;
+			}
+
+			if (activity.dataUpdateRequested || activity.historyListAdapter.getStats() == null
+					|| activity.historyListAdapter.isEmpty()) {
+				statsForApp = db.getStatsForApp(activity.packageName, params[0],
+						activity.smoothEnabled);
+
+				if (DEBUG) {
+					Log.d(TAG,
+							"statsForApp::highestRatingChange "
+									+ statsForApp.getHighestRatingChange());
+					Log.d(TAG,
+							"statsForApp::lowestRatingChanage "
+									+ statsForApp.getLowestRatingChange());
+					Log.d(TAG, "statsForApp::appStats " + statsForApp.getStats().size());
+					Log.d(TAG, "statsForApps::overall " + statsForApp.getOverallStats());
+				}
+
+				activity.dataUpdateRequested = false;
+
+				return true;
+			}
+
+			return false;
+		}
+
+		@Override
+		protected void onPostExecute(Boolean result) {
+			if (activity == null) {
+				return;
+			}
+
+			if (result && statsForApp != null) {
+				activity.updateView(statsForApp);
+			}
+			activity.refreshFinished();
 		}
 
 	}

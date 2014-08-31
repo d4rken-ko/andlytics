@@ -34,16 +34,15 @@ import java.util.List;
  * The aim is to build it from scratch to make it a light weight and as well
  * documented at the end as possible. Once it is done and available to all
  * users, we will rip out the old code and replace it with this.
- * 
+ * <p/>
  * Once v2 is available to all users, there is scope for better utilising the
  * available statistics data, so keep that in mind when developing this class.
  * For now though, keep it simple and get it working.
- * 
+ * <p/>
  * See https://github.com/AndlyticsProject/andlytics/wiki/Developer-Console-v2
  * for some more documentation
- * 
+ * <p/>
  * This class fetches the data, which is then passed using {@link JsonParser}
- * 
  */
 @SuppressLint("DefaultLocale")
 public class DevConsoleV2 implements DevConsole {
@@ -62,6 +61,14 @@ public class DevConsoleV2 implements DevConsole {
 
 	private ResponseHandler<String> responseHandler = HttpClientFactory.createResponseHandler();
 
+	private DevConsoleV2(DefaultHttpClient httpClient, DevConsoleAuthenticator authenticator,
+						 DevConsoleV2Protocol protocol) {
+		this.httpClient = httpClient;
+		this.authenticator = authenticator;
+		this.accountName = authenticator.getAccountName();
+		this.protocol = protocol;
+	}
+
 	public static DevConsoleV2 createForAccount(String accountName, DefaultHttpClient httpClient) {
 		// DevConsoleAuthenticator authenticator = new AccountManagerAuthenticator(accountName,
 		// httpClient);
@@ -72,24 +79,16 @@ public class DevConsoleV2 implements DevConsole {
 	}
 
 	public static DevConsoleV2 createForAccountAndPassword(String accountName, String password,
-			DefaultHttpClient httpClient) {
+														   DefaultHttpClient httpClient) {
 		DevConsoleAuthenticator authenticator = new PasswordAuthenticator(accountName, password,
 				httpClient);
 
 		return new DevConsoleV2(httpClient, authenticator, new DevConsoleV2Protocol());
 	}
 
-	private DevConsoleV2(DefaultHttpClient httpClient, DevConsoleAuthenticator authenticator,
-			DevConsoleV2Protocol protocol) {
-		this.httpClient = httpClient;
-		this.authenticator = authenticator;
-		this.accountName = authenticator.getAccountName();
-		this.protocol = protocol;
-	}
-
 	/**
 	 * Gets a list of available apps for the given account
-	 * 
+	 *
 	 * @param activity
 	 * @return
 	 * @throws DevConsoleException
@@ -153,7 +152,7 @@ public class DevConsoleV2 implements DevConsole {
 	/**
 	 * Gets a list of comments for the given app based on the startIndex and
 	 * count
-	 * 
+	 *
 	 * @param accountName
 	 * @param packageName
 	 * @param startIndex
@@ -162,7 +161,7 @@ public class DevConsoleV2 implements DevConsole {
 	 * @throws DevConsoleException
 	 */
 	public synchronized List<Comment> getComments(Activity activity, String packageName,
-			String developerId, int startIndex, int count, String displayLocale)
+												  String developerId, int startIndex, int count, String displayLocale)
 			throws DevConsoleException {
 		try {
 			if (!authenticateWithCachedCredentialas(activity)) {
@@ -180,7 +179,7 @@ public class DevConsoleV2 implements DevConsole {
 	}
 
 	public synchronized Comment replyToComment(Activity activity, String packageName,
-			String developerId, String commentUniqueId, String reply) {
+											   String developerId, String commentUniqueId, String reply) {
 		try {
 			if (!authenticateWithCachedCredentialas(activity)) {
 				return null;
@@ -197,7 +196,7 @@ public class DevConsoleV2 implements DevConsole {
 	}
 
 	private Comment replyToComment(String packageName, String developerId, String commentUiqueId,
-			String reply) {
+								   String reply) {
 		String response = post(protocol.createCommentsUrl(developerId),
 				protocol.createReplyToCommentRequest(packageName, commentUiqueId, reply),
 				developerId);
@@ -207,7 +206,7 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Fetches a combined list of apps for all avaiable console accounts
-	 * 
+	 *
 	 * @return combined list of apps
 	 * @throws DevConsoleException
 	 */
@@ -266,10 +265,10 @@ public class DevConsoleV2 implements DevConsole {
 	/**
 	 * Fetches statistics for the given packageName of the given statsType and
 	 * adds them to the given {@link AppStats} object
-	 * 
+	 * <p/>
 	 * This is not used as statistics can be fetched via fetchAppInfos Can use
 	 * it later to get historical etc data
-	 * 
+	 *
 	 * @param packageName
 	 * @param stats
 	 * @param statsType
@@ -287,11 +286,9 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Fetches ratings for the given packageName and adds them to the given {@link AppStats} object
-	 * 
-	 * @param packageName
-	 * The app to fetch ratings for
-	 * @param stats
-	 * The AppStats object to add them to
+	 *
+	 * @param packageName The app to fetch ratings for
+	 * @param stats       The AppStats object to add them to
 	 * @throws DevConsoleException
 	 */
 	private void fetchRatings(AppInfo appInfo, AppStats stats) throws DevConsoleException {
@@ -303,7 +300,7 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Fetches the number of comments for the given packageName
-	 * 
+	 *
 	 * @param packageName
 	 * @return
 	 * @throws DevConsoleException
@@ -336,7 +333,7 @@ public class DevConsoleV2 implements DevConsole {
 	}
 
 	private List<Comment> fetchComments(String packageName, String developerId, int startIndex,
-			int count, String displayLocale) throws DevConsoleException {
+										int count, String displayLocale) throws DevConsoleException {
 		List<Comment> comments = new ArrayList<Comment>();
 		String response = post(protocol.createCommentsUrl(developerId),
 				protocol.createFetchCommentsRequest(packageName, startIndex, count, displayLocale),
@@ -400,7 +397,7 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Logs into the Android Developer Console
-	 * 
+	 *
 	 * @param reuseAuthentication
 	 * @throws DevConsoleException
 	 */

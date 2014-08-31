@@ -39,69 +39,18 @@ public class CommentsActivity extends BaseDetailsActivity implements CommentRepl
 	private static final String REPLY_DIALOG_FRAGMENT = "reply_dialog_fragment";
 
 	private static final int MAX_LOAD_COMMENTS = 20;
-
-	private CommentsListAdapter commentsListAdapter;
-
-	private ExpandableListView list;
-
-	private View footer;
-
-	private int maxAvailableComments;
-
-	private ArrayList<CommentGroup> commentGroups;
-
-	private List<Comment> comments;
-
 	public int nextCommentIndex;
-
-	private View nocomments;
-
 	public boolean hasMoreComments;
-
+	private CommentsListAdapter commentsListAdapter;
+	private ExpandableListView list;
+	private View footer;
+	private int maxAvailableComments;
+	private ArrayList<CommentGroup> commentGroups;
+	private List<Comment> comments;
+	private View nocomments;
 	private ContentAdapter db;
 
 	private DevConsoleV2 devConsole;
-
-	private static class State {
-		LoadCommentsCache loadCommentsCache;
-		LoadCommentsData loadCommentsData;
-		List<Comment> comments;
-
-		void detachAll() {
-			if (loadCommentsCache != null) {
-				loadCommentsCache.detach();
-			}
-
-			if (loadCommentsData != null) {
-				loadCommentsData.detach();
-			}
-		}
-
-		void attachAll(CommentsActivity activity) {
-			if (loadCommentsCache != null) {
-				loadCommentsCache.attach(activity);
-			}
-
-			if (loadCommentsData != null) {
-				loadCommentsData.attach(activity);
-			}
-		}
-
-		void setLoadCommentsCache(LoadCommentsCache task) {
-			if (loadCommentsCache != null) {
-				loadCommentsCache.detach();
-			}
-			loadCommentsCache = task;
-		}
-
-		void setLoadCommentsData(LoadCommentsData task) {
-			if (loadCommentsData != null) {
-				loadCommentsData.detach();
-			}
-			loadCommentsData = task;
-		}
-	}
-
 	private State state = new State();
 
 	public void onCreate(Bundle savedInstanceState) {
@@ -182,52 +131,19 @@ public class CommentsActivity extends BaseDetailsActivity implements CommentRepl
 
 	/**
 	 * Called if item in option menu is selected.
-	 * 
-	 * @param item
-	 * The chosen menu item
+	 *
+	 * @param item The chosen menu item
 	 * @return boolean true/false
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.itemCommentsmenuRefresh:
-			refreshComments();
-			return true;
-		default:
-			return (super.onOptionsItemSelected(item));
+			case R.id.itemCommentsmenuRefresh:
+				refreshComments();
+				return true;
+			default:
+				return (super.onOptionsItemSelected(item));
 		}
-	}
-
-	private static class LoadCommentsCache extends
-			DetachableAsyncTask<Void, Void, Void, CommentsActivity> {
-
-		LoadCommentsCache(CommentsActivity activity) {
-			super(activity);
-		}
-
-		@Override
-		protected Void doInBackground(Void... params) {
-			if (activity == null) {
-				return null;
-			}
-
-			activity.getCommentsFromCache();
-			activity.rebuildCommentGroups();
-
-			return null;
-		}
-
-		@Override
-		protected void onPostExecute(Void result) {
-			if (activity == null) {
-				return;
-			}
-
-			activity.expandCommentGroups();
-			activity.showFooterIfNecessary();
-			activity.refreshCommentsIfNecessary();
-		}
-
 	}
 
 	private void getCommentsFromCache() {
@@ -266,100 +182,6 @@ public class CommentsActivity extends BaseDetailsActivity implements CommentRepl
 			}
 			commentsListAdapter.notifyDataSetChanged();
 		}
-	}
-
-	private static class LoadCommentsData extends
-			DetachableAsyncTask<Void, Void, Exception, CommentsActivity> {
-
-		LoadCommentsData(CommentsActivity activity) {
-			super(activity);
-		}
-
-		@Override
-		protected void onPreExecute() {
-			if (activity == null) {
-				return;
-			}
-
-			activity.refreshStarted();
-			activity.disableFooter();
-		}
-
-		@Override
-		protected Exception doInBackground(Void... params) {
-			if (activity == null) {
-				return null;
-			}
-
-			Exception exception = null;
-			if (activity.maxAvailableComments == -1) {
-				ContentAdapter db = activity.getDbAdapter();
-				AppStats appInfo = db.getLatestForApp(activity.packageName);
-				if (appInfo != null) {
-					activity.maxAvailableComments = appInfo.getNumberOfComments();
-				} else {
-					activity.maxAvailableComments = MAX_LOAD_COMMENTS;
-				}
-			}
-
-			if (activity.maxAvailableComments != 0) {
-				DevConsoleV2 console = DevConsoleRegistry.getInstance().get(activity.accountName);
-				try {
-					List<Comment> result = console.getComments(activity, activity.packageName,
-							activity.developerId, activity.nextCommentIndex, MAX_LOAD_COMMENTS,
-							Utils.getDisplayLocale());
-					activity.updateCommentsCacheIfNecessary(result);
-
-					// we can only do this after we authenticate at least once,
-					// which may not happen before refreshing if we are loading
-					// from cache
-					activity.commentsListAdapter
-							.setCanReplyToComments(console.canReplyToComments());
-					activity.incrementNextCommentIndex(result.size());
-					activity.rebuildCommentGroups();
-
-				} catch (Exception e) {
-					exception = e;
-				}
-			}
-
-			return exception;
-		}
-
-		@Override
-		protected void onPostExecute(Exception exception) {
-			if (activity == null) {
-				return;
-			}
-
-			activity.refreshFinished();
-			activity.enableFooter();
-
-			if (exception != null) {
-				Log.e(TAG, "Error fetching comments: " + exception.getMessage(), exception);
-				activity.handleUserVisibleException(exception);
-				activity.hideFooter();
-
-				return;
-			}
-
-			if (activity.comments != null && activity.comments.size() > 0) {
-				activity.nocomments.setVisibility(View.GONE);
-				activity.commentsListAdapter.setCommentGroups(activity.commentGroups);
-				for (int i = 0; i < activity.commentGroups.size(); i++) {
-					activity.list.expandGroup(i);
-				}
-				activity.commentsListAdapter.notifyDataSetChanged();
-			} else {
-				activity.nocomments.setVisibility(View.VISIBLE);
-			}
-
-			activity.showFooterIfNecessary();
-
-			AndlyticsDb.getInstance(activity).saveLastCommentsRemoteUpdateTime(
-					activity.packageName, System.currentTimeMillis());
-		}
-
 	}
 
 	private void incrementNextCommentIndex(int increment) {
@@ -556,6 +378,172 @@ public class CommentsActivity extends BaseDetailsActivity implements CommentRepl
 				refreshComments();
 			}
 		});
+	}
+
+	private static class State {
+		LoadCommentsCache loadCommentsCache;
+		LoadCommentsData loadCommentsData;
+		List<Comment> comments;
+
+		void detachAll() {
+			if (loadCommentsCache != null) {
+				loadCommentsCache.detach();
+			}
+
+			if (loadCommentsData != null) {
+				loadCommentsData.detach();
+			}
+		}
+
+		void attachAll(CommentsActivity activity) {
+			if (loadCommentsCache != null) {
+				loadCommentsCache.attach(activity);
+			}
+
+			if (loadCommentsData != null) {
+				loadCommentsData.attach(activity);
+			}
+		}
+
+		void setLoadCommentsCache(LoadCommentsCache task) {
+			if (loadCommentsCache != null) {
+				loadCommentsCache.detach();
+			}
+			loadCommentsCache = task;
+		}
+
+		void setLoadCommentsData(LoadCommentsData task) {
+			if (loadCommentsData != null) {
+				loadCommentsData.detach();
+			}
+			loadCommentsData = task;
+		}
+	}
+
+	private static class LoadCommentsCache extends
+			DetachableAsyncTask<Void, Void, Void, CommentsActivity> {
+
+		LoadCommentsCache(CommentsActivity activity) {
+			super(activity);
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			if (activity == null) {
+				return null;
+			}
+
+			activity.getCommentsFromCache();
+			activity.rebuildCommentGroups();
+
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			if (activity == null) {
+				return;
+			}
+
+			activity.expandCommentGroups();
+			activity.showFooterIfNecessary();
+			activity.refreshCommentsIfNecessary();
+		}
+
+	}
+
+	private static class LoadCommentsData extends
+			DetachableAsyncTask<Void, Void, Exception, CommentsActivity> {
+
+		LoadCommentsData(CommentsActivity activity) {
+			super(activity);
+		}
+
+		@Override
+		protected void onPreExecute() {
+			if (activity == null) {
+				return;
+			}
+
+			activity.refreshStarted();
+			activity.disableFooter();
+		}
+
+		@Override
+		protected Exception doInBackground(Void... params) {
+			if (activity == null) {
+				return null;
+			}
+
+			Exception exception = null;
+			if (activity.maxAvailableComments == -1) {
+				ContentAdapter db = activity.getDbAdapter();
+				AppStats appInfo = db.getLatestForApp(activity.packageName);
+				if (appInfo != null) {
+					activity.maxAvailableComments = appInfo.getNumberOfComments();
+				} else {
+					activity.maxAvailableComments = MAX_LOAD_COMMENTS;
+				}
+			}
+
+			if (activity.maxAvailableComments != 0) {
+				DevConsoleV2 console = DevConsoleRegistry.getInstance().get(activity.accountName);
+				try {
+					List<Comment> result = console.getComments(activity, activity.packageName,
+							activity.developerId, activity.nextCommentIndex, MAX_LOAD_COMMENTS,
+							Utils.getDisplayLocale());
+					activity.updateCommentsCacheIfNecessary(result);
+
+					// we can only do this after we authenticate at least once,
+					// which may not happen before refreshing if we are loading
+					// from cache
+					activity.commentsListAdapter
+							.setCanReplyToComments(console.canReplyToComments());
+					activity.incrementNextCommentIndex(result.size());
+					activity.rebuildCommentGroups();
+
+				} catch (Exception e) {
+					exception = e;
+				}
+			}
+
+			return exception;
+		}
+
+		@Override
+		protected void onPostExecute(Exception exception) {
+			if (activity == null) {
+				return;
+			}
+
+			activity.refreshFinished();
+			activity.enableFooter();
+
+			if (exception != null) {
+				Log.e(TAG, "Error fetching comments: " + exception.getMessage(), exception);
+				activity.handleUserVisibleException(exception);
+				activity.hideFooter();
+
+				return;
+			}
+
+			if (activity.comments != null && activity.comments.size() > 0) {
+				activity.nocomments.setVisibility(View.GONE);
+				activity.commentsListAdapter.setCommentGroups(activity.commentGroups);
+				for (int i = 0; i < activity.commentGroups.size(); i++) {
+					activity.list.expandGroup(i);
+				}
+				activity.commentsListAdapter.notifyDataSetChanged();
+			} else {
+				activity.nocomments.setVisibility(View.VISIBLE);
+			}
+
+			activity.showFooterIfNecessary();
+
+			AndlyticsDb.getInstance(activity).saveLastCommentsRemoteUpdateTime(
+					activity.packageName, System.currentTimeMillis());
+		}
+
 	}
 
 }

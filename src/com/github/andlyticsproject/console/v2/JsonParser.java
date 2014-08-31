@@ -27,10 +27,9 @@ import java.util.Locale;
 
 /**
  * This class contains static methods used to parse JSON from {@link DevConsoleV2}
- * 
+ * <p/>
  * See {@link https://github.com/AndlyticsProject/andlytics/wiki/Developer-Console-v2} for some more
  * documentation
- * 
  */
 public class JsonParser {
 
@@ -45,7 +44,7 @@ public class JsonParser {
 	/**
 	 * Parses the supplied JSON string and adds the extracted ratings to the supplied
 	 * {@link AppStats} object
-	 * 
+	 *
 	 * @param json
 	 * @param stats
 	 * @throws JSONException
@@ -66,7 +65,7 @@ public class JsonParser {
 	 * {@link AppStats} object
 	 * based on the supplied statsType
 	 * Not used at the moment
-	 * 
+	 *
 	 * @param json
 	 * @param stats
 	 * @param statsType
@@ -99,21 +98,21 @@ public class JsonParser {
 		int latestValue = latestData.getJSONObject("2").getInt("1");
 
 		switch (statsType) {
-		case DevConsoleV2Protocol.STATS_TYPE_TOTAL_USER_INSTALLS:
-			stats.setTotalDownloads(latestValue);
-			break;
-		case DevConsoleV2Protocol.STATS_TYPE_ACTIVE_DEVICE_INSTALLS:
-			stats.setActiveInstalls(latestValue);
-			break;
-		default:
-			break;
+			case DevConsoleV2Protocol.STATS_TYPE_TOTAL_USER_INSTALLS:
+				stats.setTotalDownloads(latestValue);
+				break;
+			case DevConsoleV2Protocol.STATS_TYPE_ACTIVE_DEVICE_INSTALLS:
+				stats.setActiveInstalls(latestValue);
+				break;
+			default:
+				break;
 		}
 
 	}
 
 	/**
 	 * Parses the supplied JSON string and builds a list of apps from it
-	 * 
+	 *
 	 * @param json
 	 * @param accountName
 	 * @param skipIncomplete
@@ -364,7 +363,7 @@ public class JsonParser {
 
 	/**
 	 * Parses the supplied JSON string and returns the number of comments.
-	 * 
+	 *
 	 * @param json
 	 * @return
 	 * @throws JSONException
@@ -381,7 +380,7 @@ public class JsonParser {
 
 	/**
 	 * Parses the supplied JSON string and returns a list of comments.
-	 * 
+	 *
 	 * @param json
 	 * @return
 	 * @throws JSONException
@@ -485,8 +484,8 @@ public class JsonParser {
 			if (translation != null) {
 				String displayLanguage = Locale.getDefault().getLanguage();
 				String translationLang = translation.getString("1");
-				
-				if(translation.has("2")) {
+
+				if (translation.has("2")) {
 					String translationTitle = translation.getString("2");
 					if (translationLang.contains(displayLanguage)) {
 						comment.setTitle(translationTitle);
@@ -494,7 +493,7 @@ public class JsonParser {
 				}
 				// Apparently, a translation body is not always provided
 				// Possibly happens if the translation fails or equals the original
-				if(translation.has("3")) {
+				if (translation.has("3")) {
 					String translationText = translation.getString("3");
 					if (translationLang.contains(displayLanguage)) {
 						comment.setText(translationText);
@@ -586,7 +585,7 @@ public class JsonParser {
 
 	/**
 	 * Parses the given date
-	 * 
+	 *
 	 * @param unixDateCode
 	 * @return
 	 */
@@ -642,7 +641,7 @@ public class JsonParser {
 													dailyRevenue = reader.nextDouble();
 													if (date != null
 															&& date.getTime() > revenueDate
-																	.getTime()) {
+															.getTime()) {
 														revenueDate = date;
 														value = dailyRevenue;
 													}

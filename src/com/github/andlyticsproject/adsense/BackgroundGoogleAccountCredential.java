@@ -45,10 +45,11 @@ import com.google.api.client.util.Sleeper;
 
 // Based on GoogleAccountCredential from google-api-java-client,
 // original JavaDoc below
+
 /**
  * {@link Beta} <br/>
  * Manages authorization and account selection for Google accounts.
- * 
+ * <p/>
  * <p>
  * When fetching a token, any thrown {@link GoogleAuthException} would be wrapped:
  * <ul>
@@ -59,25 +60,31 @@ import com.google.api.client.util.Sleeper;
  * <li>{@link GoogleAuthException} when be wrapped inside of {@link GoogleAuthIOException}</li>
  * </ul>
  * </p>
- * 
+ * <p/>
  * <p>
  * Upgrade warning: in prior version 1.14 exponential back-off was enabled by default when I/O
  * exception was thrown inside {@link #getToken}, but starting with version 1.15 you need to call
  * {@link #setBackOff} with {@link ExponentialBackOff} to enable it.
  * </p>
- * 
- * @since 1.12
+ *
  * @author Yaniv Inbar
+ * @since 1.12
  */
 @SuppressLint("NewApi")
 public class BackgroundGoogleAccountCredential implements HttpRequestInitializer {
-	/** Context. */
+	/**
+	 * Context.
+	 */
 	final Context context;
 
-	/** Scope to use on {@link GoogleAuthUtil#getToken}. */
+	/**
+	 * Scope to use on {@link GoogleAuthUtil#getToken}.
+	 */
 	final String scope;
 
-	/** Google account manager. */
+	/**
+	 * Google account manager.
+	 */
 	private final GoogleAccountManager accountManager;
 
 	/**
@@ -86,10 +93,14 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 	 */
 	private String accountName;
 
-	/** Selected Google account or {@code null} for none. */
+	/**
+	 * Selected Google account or {@code null} for none.
+	 */
 	private Account selectedAccount;
 
-	/** Sleeper. */
+	/**
+	 * Sleeper.
+	 */
 	private Sleeper sleeper = Sleeper.DEFAULT;
 
 	/**
@@ -103,13 +114,11 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 	private Bundle syncBundle;
 
 	/**
-	 * @param context
-	 * context
-	 * @param scope
-	 * scope to use on {@link GoogleAuthUtil#getToken}
+	 * @param context context
+	 * @param scope   scope to use on {@link GoogleAuthUtil#getToken}
 	 */
 	public BackgroundGoogleAccountCredential(Context context, String scope, Bundle extras,
-			String authority, Bundle syncBundle) {
+											 String authority, Bundle syncBundle) {
 		accountManager = new GoogleAccountManager(context);
 		this.context = context;
 		this.scope = scope;
@@ -121,7 +130,7 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 	/**
 	 * {@link Beta} <br/>
 	 * Constructs a new instance using OAuth 2.0 scopes.
-	 * 
+	 *
 	 * @param context
 	 * context
 	 * @param scope
@@ -144,17 +153,14 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 
 	/**
 	 * Constructs a new instance using OAuth 2.0 scopes.
-	 * 
-	 * @param context
-	 * context
-	 * @param scopes
-	 * non empty OAuth 2.0 scope list
+	 *
+	 * @param context context
+	 * @param scopes  non empty OAuth 2.0 scope list
 	 * @return new instance
-	 * 
 	 * @since 1.15
 	 */
 	public static BackgroundGoogleAccountCredential usingOAuth2(Context context,
-			Collection<String> scopes, Bundle extras, String authority, Bundle syncBundle) {
+																Collection<String> scopes, Bundle extras, String authority, Bundle syncBundle) {
 		Preconditions.checkArgument(scopes != null && scopes.iterator().hasNext());
 		String scopesStr = "oauth2: " + Joiner.on(' ').join(scopes);
 
@@ -164,30 +170,17 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 
 	/**
 	 * Sets the audience scope to use with Google Cloud Endpoints.
-	 * 
-	 * @param context
-	 * context
-	 * @param audience
-	 * audience
+	 *
+	 * @param context  context
+	 * @param audience audience
 	 * @return new instance
 	 */
 	public static BackgroundGoogleAccountCredential usingAudience(Context context, String audience,
-			Bundle extras, String authority, Bundle syncBundle) {
+																  Bundle extras, String authority, Bundle syncBundle) {
 		Preconditions.checkArgument(audience.length() != 0);
 
 		return new BackgroundGoogleAccountCredential(context, "audience:" + audience, extras,
 				authority, syncBundle);
-	}
-
-	/**
-	 * Sets the selected Google account name (e-mail address) -- for example
-	 * {@code "johndoe@gmail.com"} -- or {@code null} for none.
-	 */
-	public final BackgroundGoogleAccountCredential setSelectedAccountName(String accountName) {
-		selectedAccount = accountManager.getAccountByName(accountName);
-		// check if account has been deleted
-		this.accountName = selectedAccount == null ? null : accountName;
-		return this;
 	}
 
 	public void initialize(HttpRequest request) {
@@ -196,27 +189,37 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 		request.setUnsuccessfulResponseHandler(handler);
 	}
 
-	/** Returns the context. */
+	/**
+	 * Returns the context.
+	 */
 	public final Context getContext() {
 		return context;
 	}
 
-	/** Returns the scope to use on {@link GoogleAuthUtil#getToken}. */
+	/**
+	 * Returns the scope to use on {@link GoogleAuthUtil#getToken}.
+	 */
 	public final String getScope() {
 		return scope;
 	}
 
-	/** Returns the Google account manager. */
+	/**
+	 * Returns the Google account manager.
+	 */
 	public final GoogleAccountManager getGoogleAccountManager() {
 		return accountManager;
 	}
 
-	/** Returns all Google accounts or {@code null} for none. */
+	/**
+	 * Returns all Google accounts or {@code null} for none.
+	 */
 	public final Account[] getAllAccounts() {
 		return accountManager.getAccounts();
 	}
 
-	/** Returns the selected Google account or {@code null} for none. */
+	/**
+	 * Returns the selected Google account or {@code null} for none.
+	 */
 	public final Account getSelectedAccount() {
 		return selectedAccount;
 	}
@@ -224,7 +227,7 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 	/**
 	 * Returns the back-off policy which is used when an I/O exception is thrown inside
 	 * {@link #getToken} or {@code null} for none.
-	 * 
+	 *
 	 * @since 1.15
 	 */
 	public BackOff getBackOff() {
@@ -234,7 +237,7 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 	/**
 	 * Sets the back-off policy which is used when an I/O exception is thrown inside
 	 * {@link #getToken} or {@code null} for none.
-	 * 
+	 *
 	 * @since 1.15
 	 */
 	public BackgroundGoogleAccountCredential setBackOff(BackOff backOff) {
@@ -244,7 +247,7 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 
 	/**
 	 * Returns the sleeper.
-	 * 
+	 *
 	 * @since 1.15
 	 */
 	public final Sleeper getSleeper() {
@@ -253,7 +256,7 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 
 	/**
 	 * Sets the sleeper. The default value is {@link Sleeper#DEFAULT}.
-	 * 
+	 *
 	 * @since 1.15
 	 */
 	public final BackgroundGoogleAccountCredential setSleeper(Sleeper sleeper) {
@@ -270,22 +273,33 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 	}
 
 	/**
+	 * Sets the selected Google account name (e-mail address) -- for example
+	 * {@code "johndoe@gmail.com"} -- or {@code null} for none.
+	 */
+	public final BackgroundGoogleAccountCredential setSelectedAccountName(String accountName) {
+		selectedAccount = accountManager.getAccountByName(accountName);
+		// check if account has been deleted
+		this.accountName = selectedAccount == null ? null : accountName;
+		return this;
+	}
+
+	/**
 	 * Returns an intent to show the user to select a Google account, or create a new one if there
 	 * are
 	 * none on the device yet.
-	 * 
+	 * <p/>
 	 * <p>
 	 * Must be run from the main UI thread.
 	 * </p>
 	 */
 	public final Intent newChooseAccountIntent() {
 		return AccountPicker.newChooseAccountIntent(selectedAccount, null,
-				new String[] { GoogleAccountManager.ACCOUNT_TYPE }, true, null, null, null, null);
+				new String[]{GoogleAccountManager.ACCOUNT_TYPE}, true, null, null, null, null);
 	}
 
 	/**
 	 * Returns an OAuth 2.0 access token.
-	 * 
+	 * <p/>
 	 * <p>
 	 * Must be run from a background thread, not the main UI thread.
 	 * </p>
@@ -316,7 +330,9 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 
 	class RequestHandler implements HttpExecuteInterceptor, HttpUnsuccessfulResponseHandler {
 
-		/** Whether we've received a 401 error code indicating the token is invalid. */
+		/**
+		 * Whether we've received a 401 error code indicating the token is invalid.
+		 */
 		boolean received401;
 		String token;
 
@@ -337,7 +353,7 @@ public class BackgroundGoogleAccountCredential implements HttpRequestInitializer
 		}
 
 		public boolean handleResponse(HttpRequest request, HttpResponse response,
-				boolean supportsRetry) {
+									  boolean supportsRetry) {
 			if (response.getStatusCode() == 401 && !received401) {
 				received401 = true;
 				GoogleAuthUtil.invalidateToken(context, token);

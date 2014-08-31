@@ -25,18 +25,15 @@ import java.util.regex.Pattern;
 
 public abstract class BaseAuthenticator implements DevConsoleAuthenticator {
 
-	private static final String TAG = BaseAuthenticator.class.getSimpleName();
-
 	protected static final Pattern DEV_ACC_PATTERN = Pattern
 			.compile("\"DeveloperConsoleAccounts\":\"\\{\\\\\"1\\\\\":\\[\\{\\\\\"1\\\\\":\\\\\"(\\d{20})\\\\\"");
 	protected static final Pattern DEV_ACCS_PATTERN = Pattern
 			.compile("\\\\\"1\\\\\":\\\\\"(\\d{20})\\\\\",\\\\\"2\\\\\":\\\\\"(.+?)\\\\\",");
 	protected static final Pattern XSRF_TOKEN_PATTERN = Pattern
 			.compile("\"XsrfToken\":\"\\{\\\\\"1\\\\\":\\\\\"(\\S+)\\\\\"\\}\"");
-
 	protected static final Pattern WHITELISTED_FEATURES_PATTERN = Pattern
 			.compile("\"WhitelistedFeatures\":\"\\{\\\\\"1\\\\\":\\[(\\S+?)\\]\\}");
-
+	private static final String TAG = BaseAuthenticator.class.getSimpleName();
 	protected String accountName;
 
 	protected BaseAuthenticator(String accountName) {
