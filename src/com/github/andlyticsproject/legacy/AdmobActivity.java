@@ -16,6 +16,8 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -25,8 +27,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.AdmobListAdapter;
 import com.github.andlyticsproject.AndlyticsApp;
 import com.github.andlyticsproject.ContentAdapter;
@@ -174,7 +174,7 @@ public class AdmobActivity extends BaseChartActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.clear();
-		getSupportMenuInflater().inflate(R.menu.admob_menu, menu);
+		getMenuInflater().inflate(R.menu.admob_menu, menu);
 		super.onCreateOptionsMenu(menu);
 		String[] admobDetails = AndlyticsDb.getInstance(this).getAdmobDetails(packageName);
 

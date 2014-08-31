@@ -13,8 +13,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.view.ActionMode;
 import android.text.Html;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -23,11 +28,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.ActionMode;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.cache.AppIconInMemoryCache;
 import com.github.andlyticsproject.db.AndlyticsDb;
 import com.github.andlyticsproject.dialog.AddEditLinkDialog;
@@ -37,7 +37,7 @@ import com.github.andlyticsproject.model.Link;
 import com.github.andlyticsproject.util.DetachableAsyncTask;
 import com.github.andlyticsproject.util.Utils;
 
-public class AppInfoActivity extends SherlockFragmentActivity implements
+public class AppInfoActivity extends ActionBarActivity implements
 		AddEditLinkDialog.OnFinishAddEditLinkDialogListener, OnItemLongClickListener {
 
 	public static final String TAG = Main.class.getSimpleName();
@@ -132,7 +132,7 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 			return false;
 		}
 
-		currentActionMode = startActionMode(new ContextCallback(position));
+		currentActionMode = startSupportActionMode(new ContextCallback(position));
 		list.setItemChecked(position, true);
 
 		return true;
@@ -148,7 +148,7 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 		}
 
 		public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-			MenuInflater inflater = getSupportMenuInflater();
+			MenuInflater inflater = getMenuInflater();
 			inflater.inflate(R.menu.links_context_menu, menu);
 			return true;
 		}
@@ -185,12 +185,12 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 			list.setItemChecked(position, false);
 			currentActionMode = null;
 		}
-	};
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.clear();
-		getSupportMenuInflater().inflate(R.menu.links_menu, menu);
+		getMenuInflater().inflate(R.menu.links_menu, menu);
 
 		return true;
 	}

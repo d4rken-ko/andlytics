@@ -4,10 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.BaseActivity;
 import com.github.andlyticsproject.Preferences;
 import com.github.andlyticsproject.R;

@@ -9,13 +9,13 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
 import com.github.andlyticsproject.CommentReplier;
 import com.github.andlyticsproject.CommentsListAdapter;
 import com.github.andlyticsproject.ContentAdapter;
@@ -171,7 +171,7 @@ public class CommentsActivity extends BaseDetailsActivity implements CommentRepl
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.clear();
-		getSupportMenuInflater().inflate(R.menu.comments_menu, menu);
+		getMenuInflater().inflate(R.menu.comments_menu, menu);
 		if (isRefreshing()) {
 			menu.findItem(R.id.itemCommentsmenuRefresh).setActionView(
 					R.layout.action_bar_indeterminate_progress);

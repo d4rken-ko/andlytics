@@ -13,19 +13,19 @@ import android.accounts.OperationCanceledException;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.Window;
 import com.github.andlyticsproject.model.DeveloperAccount;
 import com.github.andlyticsproject.sync.AutosyncHandler;
 
@@ -38,7 +38,7 @@ import com.github.andlyticsproject.sync.AutosyncHandler;
  * or
  * Main -> LoginActivity -> Main
  */
-public class LoginActivity extends SherlockActivity {
+public class LoginActivity extends ActionBarActivity {
 
 	private static final String TAG = LoginActivity.class.getSimpleName();
 
@@ -65,7 +65,7 @@ public class LoginActivity extends SherlockActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		accountManager = AccountManager.get(this);
 		developerAccountManager = DeveloperAccountManager.getInstance(getApplicationContext());
@@ -150,7 +150,7 @@ public class LoginActivity extends SherlockActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
-		getSupportMenuInflater().inflate(R.menu.login_menu, menu);
+		getMenuInflater().inflate(R.menu.login_menu, menu);
 		return true;
 	}
 

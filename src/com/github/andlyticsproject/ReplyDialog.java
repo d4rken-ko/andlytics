@@ -14,9 +14,7 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockDialogFragment;
-
-public class ReplyDialog extends SherlockDialogFragment {
+public class ReplyDialog extends DialogFragment {
 
 	public static final int DEVELOPER_REPLY_MAX_CHARACTERS = 350;
 

@@ -17,14 +17,14 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:19.0.+'
-    compile 'com.actionbarsherlock:actionbarsherlock:4.4.0@aar'
-    compile "org.achartengine:achartengine:1.1.0"
-    compile "ch.acra:acra:4.5.0"
+    compile 'com.android.support:support-v4:20.0.0'
+    compile 'com.android.support:appcompat-v7:20.0.0'
+    compile 'org.achartengine:achartengine:1.1.0'
+    compile 'com.github.machinarius:preferencefragment:0.1.1'
+    compile 'ch.acra:acra:4.5.0'
     compile 'com.google.android.gms:play-services:4.0.30'
     compile 'org.apache.commons:commons-lang3:3.1'
-
-    compile ('com.google.api-client:google-api-client:1.16.0-rc') {
+    compile('com.google.api-client:google-api-client:1.16.0-rc') {
         exclude group: 'org.apache.httpcomponents'
         exclude group: 'xpp3'
         exclude group: 'junit'
