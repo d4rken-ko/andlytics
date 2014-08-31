@@ -17,93 +17,93 @@ import com.github.machinarius.preferencefragment.PreferenceFragment;
 @SuppressWarnings("deprecation")
 public class NotificationPreferenceActivity extends ActionBarActivity {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(android.R.id.content, new AndlyticsNotificationsFragment());
-        ft.commit();
-    }
+		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+		ft.replace(android.R.id.content, new AndlyticsNotificationsFragment());
+		ft.commit();
+	}
 
-    @SuppressLint("ValidFragment")
-    public class AndlyticsNotificationsFragment extends PreferenceFragment {
+	@SuppressLint("ValidFragment")
+	public class AndlyticsNotificationsFragment extends PreferenceFragment {
 
-        private CheckBoxPreference downloadsPref;
-        private CheckBoxPreference ratingsPref;
-        private CheckBoxPreference commentsPref;
-        private PreferenceCategory notificationSignalPrefCat;
+		private CheckBoxPreference downloadsPref;
+		private CheckBoxPreference ratingsPref;
+		private CheckBoxPreference commentsPref;
+		private PreferenceCategory notificationSignalPrefCat;
 
-        @Override
-        public void onCreate(Bundle paramBundle) {
-            super.onCreate(paramBundle);
+		@Override
+		public void onCreate(Bundle paramBundle) {
+			super.onCreate(paramBundle);
 
-            setHasOptionsMenu(true);
+			setHasOptionsMenu(true);
 
-            PreferenceManager prefMgr = getPreferenceManager();
-            prefMgr.setSharedPreferencesName(Preferences.PREF);
-            addPreferencesFromResource(R.xml.notification_preferences);
+			PreferenceManager prefMgr = getPreferenceManager();
+			prefMgr.setSharedPreferencesName(Preferences.PREF);
+			addPreferencesFromResource(R.xml.notification_preferences);
 
-            // Get a reference to the notification triggers so that we can visually disable the other
-            // notification preferences when all the triggers are disabled
-            // TODO: Can we do this all using one generic listener?
-            ratingsPref = (CheckBoxPreference) getPreferenceScreen().findPreference(
-                    Preferences.NOTIFICATION_CHANGES_RATING);
-            ratingsPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Boolean notificationsEnabled = (Boolean) newValue || commentsPref.isChecked()
-                            || downloadsPref.isChecked();
-                    notificationSignalPrefCat.setEnabled(notificationsEnabled);
-                    return true;
-                }
-            });
+			// Get a reference to the notification triggers so that we can visually disable the other
+			// notification preferences when all the triggers are disabled
+			// TODO: Can we do this all using one generic listener?
+			ratingsPref = (CheckBoxPreference) getPreferenceScreen().findPreference(
+					Preferences.NOTIFICATION_CHANGES_RATING);
+			ratingsPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+				@Override
+				public boolean onPreferenceChange(Preference preference, Object newValue) {
+					Boolean notificationsEnabled = (Boolean) newValue || commentsPref.isChecked()
+							|| downloadsPref.isChecked();
+					notificationSignalPrefCat.setEnabled(notificationsEnabled);
+					return true;
+				}
+			});
 
-            commentsPref = (CheckBoxPreference) getPreferenceScreen().findPreference(
-                    Preferences.NOTIFICATION_CHANGES_COMMENTS);
-            commentsPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Boolean notificationsEnabled = (Boolean) newValue || ratingsPref.isChecked()
-                            || downloadsPref.isChecked();
-                    notificationSignalPrefCat.setEnabled(notificationsEnabled);
-                    return true;
-                }
-            });
+			commentsPref = (CheckBoxPreference) getPreferenceScreen().findPreference(
+					Preferences.NOTIFICATION_CHANGES_COMMENTS);
+			commentsPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+				@Override
+				public boolean onPreferenceChange(Preference preference, Object newValue) {
+					Boolean notificationsEnabled = (Boolean) newValue || ratingsPref.isChecked()
+							|| downloadsPref.isChecked();
+					notificationSignalPrefCat.setEnabled(notificationsEnabled);
+					return true;
+				}
+			});
 
-            downloadsPref = (CheckBoxPreference) getPreferenceScreen().findPreference(
-                    Preferences.NOTIFICATION_CHANGES_DOWNLOADS);
-            downloadsPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Boolean notificationsEnabled = (Boolean) newValue || ratingsPref.isChecked()
-                            || commentsPref.isChecked();
-                    notificationSignalPrefCat.setEnabled(notificationsEnabled);
-                    return true;
-                }
-            });
+			downloadsPref = (CheckBoxPreference) getPreferenceScreen().findPreference(
+					Preferences.NOTIFICATION_CHANGES_DOWNLOADS);
+			downloadsPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+				@Override
+				public boolean onPreferenceChange(Preference preference, Object newValue) {
+					Boolean notificationsEnabled = (Boolean) newValue || ratingsPref.isChecked()
+							|| commentsPref.isChecked();
+					notificationSignalPrefCat.setEnabled(notificationsEnabled);
+					return true;
+				}
+			});
 
-            // Notification signal
-            notificationSignalPrefCat = (PreferenceCategory) getPreferenceScreen().findPreference(
-                    "prefCatNotificationSignal");
-            // Set initial enabled state based on the triggers
-            Boolean notificationsEnabled = commentsPref.isChecked() || ratingsPref.isChecked()
-                    || downloadsPref.isChecked();
-            notificationSignalPrefCat.setEnabled(notificationsEnabled);
-        }
+			// Notification signal
+			notificationSignalPrefCat = (PreferenceCategory) getPreferenceScreen().findPreference(
+					"prefCatNotificationSignal");
+			// Set initial enabled state based on the triggers
+			Boolean notificationsEnabled = commentsPref.isChecked() || ratingsPref.isChecked()
+					|| downloadsPref.isChecked();
+			notificationSignalPrefCat.setEnabled(notificationsEnabled);
+		}
 
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            switch (item.getItemId()) {
-                case android.R.id.home:
-                    finish();
-                    return true;
-                default:
-                    return super.onOptionsItemSelected(item);
-            }
-        }
-    }
+		@Override
+		public boolean onOptionsItemSelected(MenuItem item) {
+			switch (item.getItemId()) {
+				case android.R.id.home:
+					finish();
+					return true;
+				default:
+					return super.onOptionsItemSelected(item);
+			}
+		}
+	}
 
 }

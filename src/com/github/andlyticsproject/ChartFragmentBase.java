@@ -194,7 +194,7 @@ public abstract class ChartFragmentBase extends Fragment implements ViewSwitcher
 
 	protected final void updateTitleTextSwitcher(String string) {
 		if (getActivity() != null) {
-            getActivity().setTitle(string);
+			getActivity().setTitle(string);
 		}
 	}
 

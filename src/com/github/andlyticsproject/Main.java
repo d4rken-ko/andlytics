@@ -227,7 +227,7 @@ public class Main extends BaseActivity implements ActionBar.OnNavigationListener
 		getMenuInflater().inflate(R.menu.main_menu, menu);
 		statsModeMenuItem = menu.findItem(R.id.itemMainmenuStatsMode);
 		if (isRefreshing())
-            MenuItemCompat.setActionView(menu.findItem(R.id.itemMainmenuRefresh), R.layout.action_bar_indeterminate_progress);
+			MenuItemCompat.setActionView(menu.findItem(R.id.itemMainmenuRefresh), R.layout.action_bar_indeterminate_progress);
 		updateStatsMode();
 		return true;
 	}

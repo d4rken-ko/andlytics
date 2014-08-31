@@ -93,8 +93,8 @@ public abstract class ChartFragment<T extends Statistic> extends ChartFragmentBa
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(getTitle());
+		((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(getTitle());
 
 		Bundle b = getArguments();
 		if (b != null) {
@@ -254,12 +254,12 @@ public abstract class ChartFragment<T extends Statistic> extends ChartFragmentBa
 			activeTimeFrame = menu.findItem(R.id.itemChartsmenuTimeframeMonthToDate);
 			break;
 		}
-        if (activeTimeFrame != null) {
-            activeTimeFrame.setChecked(true);
-        }
+		if (activeTimeFrame != null) {
+			activeTimeFrame.setChecked(true);
+		}
 
 		if (statsActivity.isRefreshing()) {
-            MenuItemCompat.setActionView(menu.findItem(R.id.itemChartsmenuRefresh), R.layout.action_bar_indeterminate_progress);
+			MenuItemCompat.setActionView(menu.findItem(R.id.itemChartsmenuRefresh), R.layout.action_bar_indeterminate_progress);
 		}
 	}
 

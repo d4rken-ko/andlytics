@@ -201,7 +201,7 @@ public class CommentsFragment extends Fragment implements StatsView<Comment>,
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getActivity().setTitle(getTitle());
 	}
 
@@ -300,7 +300,7 @@ public class CommentsFragment extends Fragment implements StatsView<Comment>,
 		inflater.inflate(R.menu.comments_menu, menu);
 
 		if (statsActivity.isRefreshing()) {
-            MenuItemCompat.setActionView(menu.findItem(R.id.itemCommentsmenuRefresh), R.layout.action_bar_indeterminate_progress);
+			MenuItemCompat.setActionView(menu.findItem(R.id.itemCommentsmenuRefresh), R.layout.action_bar_indeterminate_progress);
 		}
 	}
 

@@ -241,7 +241,7 @@ public class ExportActivity extends ActionBarActivity {
 				return;
 			}
 
-            activity.setSupportProgressBarIndeterminateVisibility(false);
+			activity.setSupportProgressBarIndeterminateVisibility(false);
 
 			if (!activity.isFinishing()) {
 				if (result != null) {

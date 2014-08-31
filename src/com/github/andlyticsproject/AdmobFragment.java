@@ -295,9 +295,9 @@ public class AdmobFragment extends ChartFragment<AdmobStats> implements
 			activeTimeFrame = menu.findItem(R.id.itemAdmobsmenuTimeframeMonthToDate);
 			break;
 		}
-        if (activeTimeFrame != null) {
-            activeTimeFrame.setChecked(true);
-        }
+		if (activeTimeFrame != null) {
+			activeTimeFrame.setChecked(true);
+		}
 
 		String[] admobDetails = AndlyticsDb.getInstance(getActivity()).getAdmobDetails(
 				statsActivity.getPackage());
