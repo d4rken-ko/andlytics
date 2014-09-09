@@ -1,5 +1,21 @@
 package com.github.andlyticsproject.console.v2;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.apache.http.HttpStatus;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.util.Log;
@@ -12,38 +28,24 @@ import com.github.andlyticsproject.model.AppInfo;
 import com.github.andlyticsproject.model.AppStats;
 import com.github.andlyticsproject.model.Comment;
 import com.github.andlyticsproject.model.DeveloperConsoleAccount;
-import com.github.andlyticsproject.model.Revenue;
 import com.github.andlyticsproject.model.RevenueSummary;
 import com.github.andlyticsproject.util.Utils;
-
-import org.apache.http.HttpStatus;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This is a WIP class representing the new v2 version of the developer console.
  * The aim is to build it from scratch to make it a light weight and as well
  * documented at the end as possible. Once it is done and available to all
  * users, we will rip out the old code and replace it with this.
- * 
+ *
  * Once v2 is available to all users, there is scope for better utilising the
  * available statistics data, so keep that in mind when developing this class.
  * For now though, keep it simple and get it working.
- * 
+ *
  * See https://github.com/AndlyticsProject/andlytics/wiki/Developer-Console-v2
  * for some more documentation
- * 
+ *
  * This class fetches the data, which is then passed using {@link JsonParser}
- * 
+ *
  */
 @SuppressLint("DefaultLocale")
 public class DevConsoleV2 implements DevConsole {
@@ -61,6 +63,9 @@ public class DevConsoleV2 implements DevConsole {
 	private DevConsoleV2Protocol protocol;
 
 	private ResponseHandler<String> responseHandler = HttpClientFactory.createResponseHandler();
+
+	// This is only used for synchronising fetchAppInfosAndStatistics()
+	private CountDownLatch fetchAppInfoCounter;
 
 	public static DevConsoleV2 createForAccount(String accountName, DefaultHttpClient httpClient) {
 		DevConsoleAuthenticator authenticator = new OauthAccountManagerAuthenticator(accountName,
@@ -87,7 +92,7 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Gets a list of available apps for the given account
-	 * 
+	 *
 	 * @param activity
 	 * @return
 	 * @throws DevConsoleException
@@ -109,39 +114,70 @@ public class DevConsoleV2 implements DevConsole {
 		}
 	}
 
+
 	private List<AppInfo> fetchAppInfosAndStatistics() {
 		// Fetch a list of available apps
+		ExecutorService executor = Executors.newFixedThreadPool(10); // Only process 10 at a time
 		List<AppInfo> apps = fetchAppInfos();
+		fetchAppInfoCounter = new CountDownLatch(apps.size());
 
-		for (AppInfo app : apps) {
-			// Fetch remaining app statistics
-			// Latest stats object, and active/total installs is fetched
-			// in fetchAppInfos
-			AppStats stats = app.getLatestStats();
-			fetchRatings(app, stats);
-			stats.setNumberOfComments(fetchCommentsCount(app, Utils.getDisplayLocale()));
+		for (final AppInfo app : apps) {
+			/*
+			 * Generate a new thread for each app. This removes the queueing behaviour so requests
+			 * are made in parallel.
+			 */
+			Thread thread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						Log.d("start app", app.getName());
 
-			RevenueSummary revenue = fetchRevenueSummary(app);
-			app.setTotalRevenueSummary(revenue);
-			// this is currently the same as the last item of the historical
-			// data, so save some cycles and don't parse historical
-			// XXX the definition of 'last day' is unclear: GMT?
-			if (revenue != null) {
-				stats.setTotalRevenue(revenue.getLastDay());
-			}
+						// Fetch remaining app statistics
+						// Latest stats object, and active/total installs is fetched
+						// in fetchAppInfos
+						AppStats stats = app.getLatestStats();
+						fetchRatings(app, stats);
+						stats.setNumberOfComments(fetchCommentsCount(app, Utils.getDisplayLocale()));
 
-			// only works on 11+
-			// XXX the latest recorded revenue is not necessarily today's
-			// revenue. Check the date and do something clever or revise
-			// how of all this is stored?
+						RevenueSummary revenue = fetchRevenueSummary(app);
+						app.setTotalRevenueSummary(revenue);
+						// this is currently the same as the last item of the historical
+						// data, so save some cycles and don't parse historical
+						// XXX the definition of 'last day' is unclear: GMT?
+						if (revenue != null) {
+							stats.setTotalRevenue(revenue.getLastDay());
+						}
 
-			// if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			// Revenue latestRevenue = fetchLatestTotalRevenue(app);
-			// if (latestRevenue != null) {
-			// stats.setTotalRevenue(latestRevenue.getAmount());
-			// }
-			// }
+						Log.d("end app", app.getName());
+					}
+					finally {
+						Log.w("finally app", app.getName());
+
+						// Increment the number of successful fetches, then wake the lock.
+						synchronized (fetchAppInfoCounter) {
+							Log.e("fetch counter", String.valueOf(fetchAppInfoCounter.getCount()));
+							fetchAppInfoCounter.countDown();
+
+							Log.w("finally count", String.valueOf(fetchAppInfoCounter.getCount()));
+						}
+					}
+				}
+			});
+
+			executor.execute(thread);
 		}
+
+
+		// Wait for lock to be triggered
+		// Keep waiting for the other threads to finish
+    	try {
+    		Log.e("Waiting", "waiting...");
+			fetchAppInfoCounter.await();
+		}
+		catch (InterruptedException e) {
+		}
+
+    	Log.e("Waiting", "DONE!");
 
 		return apps;
 	}
@@ -149,7 +185,7 @@ public class DevConsoleV2 implements DevConsole {
 	/**
 	 * Gets a list of comments for the given app based on the startIndex and
 	 * count
-	 * 
+	 *
 	 * @param accountName
 	 * @param packageName
 	 * @param startIndex
@@ -203,7 +239,7 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Fetches a combined list of apps for all avaiable console accounts
-	 * 
+	 *
 	 * @return combined list of apps
 	 * @throws DevConsoleException
 	 */
@@ -262,10 +298,10 @@ public class DevConsoleV2 implements DevConsole {
 	/**
 	 * Fetches statistics for the given packageName of the given statsType and
 	 * adds them to the given {@link AppStats} object
-	 * 
+	 *
 	 * This is not used as statistics can be fetched via fetchAppInfos Can use
 	 * it later to get historical etc data
-	 * 
+	 *
 	 * @param packageName
 	 * @param stats
 	 * @param statsType
@@ -283,7 +319,7 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Fetches ratings for the given packageName and adds them to the given {@link AppStats} object
-	 * 
+	 *
 	 * @param packageName
 	 * The app to fetch ratings for
 	 * @param stats
@@ -299,7 +335,7 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Fetches the number of comments for the given packageName
-	 * 
+	 *
 	 * @param packageName
 	 * @return
 	 * @throws DevConsoleException
@@ -364,28 +400,6 @@ public class DevConsoleV2 implements DevConsole {
 		}
 	}
 
-	private Revenue fetchLatestTotalRevenue(AppInfo appInfo) throws DevConsoleException {
-		try {
-			String developerId = appInfo.getDeveloperId();
-			String response = post(protocol.createRevenueUrl(developerId),
-					protocol.createFetchHistoricalRevenueRequest(appInfo.getPackageName()),
-					developerId);
-
-			return protocol.parseLatestTotalRevenue(response);
-		} catch (NetworkException e) {
-			// XXX not pretty, maybe use a dedicated exception?
-			// if we don't have 'view financial info' permission for an app
-			// getting revenue returns 403.
-			// same sems to apply for 500
-			if (e.getStatusCode() == HttpStatus.SC_FORBIDDEN
-					|| e.getStatusCode() == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-				return null;
-			}
-
-			throw e;
-		}
-	}
-
 	private boolean authenticateWithCachedCredentialas(Activity activity) {
 		return authenticate(activity, false);
 	}
@@ -396,7 +410,7 @@ public class DevConsoleV2 implements DevConsole {
 
 	/**
 	 * Logs into the Android Developer Console
-	 * 
+	 *
 	 * @param reuseAuthentication
 	 * @throws DevConsoleException
 	 */
