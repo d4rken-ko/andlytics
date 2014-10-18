@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
@@ -121,14 +122,24 @@ public class NotificationHandler {
 							Preferences.NOTIFICATION_WHEN_ACCOUNT_VISISBLE)) {
 				// The user can choose not to see notifications if the current account is visible
 
-				Builder builder = new NotificationCompat.Builder(context);
+				final Builder builder = new NotificationCompat.Builder(context);
 				builder.setSmallIcon(R.drawable.statusbar_andlytics);
 				builder.setContentTitle(contentTitle);
 				builder.setContentText(contentText);
 				File iconFilePath = new File(context.getCacheDir(), iconName);
 				if (iconFilePath.exists()) {
-					Bitmap bm = BitmapFactory.decodeFile(iconFilePath.getAbsolutePath());
-					builder.setLargeIcon(bm);
+					new AsyncTask<File, Void, Bitmap>() {
+						@Override
+						protected Bitmap doInBackground(File... args) {
+							Bitmap bm = BitmapFactory.decodeFile(args[0].getAbsolutePath());
+							return bm;
+						}
+						
+						@Override
+						protected void onPostExecute(Bitmap bm) {
+							builder.setLargeIcon(bm);
+						}
+					}.execute(iconFilePath);
 				}
 				BigTextStyle style = new BigTextStyle(builder);
 				style.bigText(contentText);
