@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -78,9 +79,19 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 		}
 
 		if (iconFilePath != null) {
-			Bitmap bm = BitmapFactory.decodeFile(iconFilePath);
-			BitmapDrawable icon = new BitmapDrawable(getResources(), bm);
-			getSupportActionBar().setIcon(icon);
+			new AsyncTask<Void, Void, Bitmap>() {
+				@Override
+				protected Bitmap doInBackground(Void... params) {
+					Bitmap bm = BitmapFactory.decodeFile(iconFilePath);
+					return bm;
+				}
+				
+				@Override
+				protected void onPostExecute(Bitmap bm) {
+					BitmapDrawable icon = new BitmapDrawable(getResources(), bm);
+					getSupportActionBar().setIcon(icon);
+				}
+			}.execute();
 		}
 
 		LayoutInflater layoutInflater = getLayoutInflater();
