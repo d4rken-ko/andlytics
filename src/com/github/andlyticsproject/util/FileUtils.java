@@ -23,14 +23,18 @@ public class FileUtils {
 	}
 
 	public static void writeToFile(File file, String str) {
-		try {
-			FileOutputStream out = new FileOutputStream(file);
-			out.write(str.getBytes("UTF-8"));
-			out.flush();
-			FileUtils.closeSilently(out);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		new Thread() {
+			public void run() {
+				try {
+					FileOutputStream out = new FileOutputStream(file);
+					out.write(str.getBytes("UTF-8"));
+					out.flush();
+					FileUtils.closeSilently(out);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}.start();
 	}
 
 	public static void writeToExternalStorage(String filename, String str) {
