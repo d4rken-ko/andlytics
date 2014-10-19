@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -96,22 +95,30 @@ public class DetailsActivity extends BaseActivity implements DetailedStatsActivi
 		appName = getDbAdapter().getAppName(packageName);
 		hasRevenue = getIntent().getBooleanExtra(EXTRA_HAS_REVENUE, true);
 
-		final ActionBar actionBar = getSupportActionBar();
+		ActionBar actionBar = getSupportActionBar();
 
 		if (iconFilePath != null) {
-			new AsyncTask<Void, Void, Bitmap>() {
+			Utils.execute(new DetachableAsyncTask<Void, Void, Bitmap, DetailsActivity>(this) {
 				@Override
 				protected Bitmap doInBackground(Void... params) {
+					if (activity == null) {
+						return null;
+					}
+					
 					Bitmap bm = BitmapFactory.decodeFile(iconFilePath);
 					return bm;
 				}
 				
 				@Override
 				protected void onPostExecute(Bitmap bm) {
-					BitmapDrawable icon = new BitmapDrawable(getResources(), bm);
-					actionBar.setIcon(icon);
+					if (activity == null) {
+						return;
+					}
+					
+					BitmapDrawable icon = new BitmapDrawable(activity.getResources(), bm);
+					activity.getSupportActionBar().setIcon(icon);
 				}
-			}.execute();
+			});
 		}
 		
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
