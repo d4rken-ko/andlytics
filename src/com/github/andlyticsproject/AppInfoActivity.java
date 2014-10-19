@@ -10,7 +10,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -79,19 +78,7 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 		}
 
 		if (iconFilePath != null) {
-			new AsyncTask<Void, Void, Bitmap>() {
-				@Override
-				protected Bitmap doInBackground(Void... params) {
-					Bitmap bm = BitmapFactory.decodeFile(iconFilePath);
-					return bm;
-				}
-				
-				@Override
-				protected void onPostExecute(Bitmap bm) {
-					BitmapDrawable icon = new BitmapDrawable(getResources(), bm);
-					getSupportActionBar().setIcon(icon);
-				}
-			}.execute();
+			Utils.execute(new LoadBitmap(this));
 		}
 
 		LayoutInflater layoutInflater = getLayoutInflater();
@@ -268,6 +255,32 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 			activity.refreshLinks();
 		}
 
+	}
+	
+	private class LoadBitmap extends DetachableAsyncTask<Void, Void, Bitmap, AppInfoActivity> {
+		
+		LoadBitmap(AppInfoActivity activity) {
+			super(activity);
+		}
+		
+		@Override
+		protected Bitmap doInBackground(Void... params) {
+			if (activity == null) {
+				return null;
+			}
+			Bitmap bm = BitmapFactory.decodeFile(iconFilePath);
+			return bm;
+		}
+		
+		@Override
+		protected void onPostExecute(Bitmap bm) {
+			if (activity == null) {
+				return;
+			}
+			
+			BitmapDrawable icon = new BitmapDrawable(activity.getResources(), bm);
+			activity.getSupportActionBar().setIcon(icon);
+		}
 	}
 
 	private void getLinksFromDb() {
