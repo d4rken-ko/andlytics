@@ -121,7 +121,7 @@ public class NotificationHandler {
 							Preferences.NOTIFICATION_WHEN_ACCOUNT_VISISBLE)) {
 				// The user can choose not to see notifications if the current account is visible
 
-				final Builder builder = new NotificationCompat.Builder(context);
+				Builder builder = new NotificationCompat.Builder(context);
 				builder.setSmallIcon(R.drawable.statusbar_andlytics);
 				builder.setContentTitle(contentTitle);
 				builder.setContentText(contentText);
