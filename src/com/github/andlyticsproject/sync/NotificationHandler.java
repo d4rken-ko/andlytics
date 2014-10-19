@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
@@ -128,18 +127,8 @@ public class NotificationHandler {
 				builder.setContentText(contentText);
 				File iconFilePath = new File(context.getCacheDir(), iconName);
 				if (iconFilePath.exists()) {
-					new AsyncTask<File, Void, Bitmap>() {
-						@Override
-						protected Bitmap doInBackground(File... args) {
-							Bitmap bm = BitmapFactory.decodeFile(args[0].getAbsolutePath());
-							return bm;
-						}
-						
-						@Override
-						protected void onPostExecute(Bitmap bm) {
-							builder.setLargeIcon(bm);
-						}
-					}.execute(iconFilePath);
+					Bitmap bm = BitmapFactory.decodeFile(iconFilePath.getAbsolutePath());
+					builder.setLargeIcon(bm);
 				}
 				BigTextStyle style = new BigTextStyle(builder);
 				style.bigText(contentText);
