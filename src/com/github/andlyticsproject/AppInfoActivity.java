@@ -45,6 +45,7 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 	private LinksListAdapter linksListAdapter;
 
 	private LoadLinksDb loadLinksDb;
+	private LoadBitmap loadBitmap;
 
 	private AppInfo appInfo;
 	private List<Link> links;
