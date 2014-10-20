@@ -45,6 +45,8 @@ public class DetailsActivity extends BaseActivity implements DetailedStatsActivi
 
 	private String appName;
 	private boolean hasRevenue;
+	
+	private LoadBitmap loadBitmap;
 
 	public static class TabListener<T extends StatsView<?>> implements ActionBar.TabListener {
 
@@ -98,27 +100,16 @@ public class DetailsActivity extends BaseActivity implements DetailedStatsActivi
 		ActionBar actionBar = getSupportActionBar();
 
 		if (iconFilePath != null) {
-			Utils.execute(new DetachableAsyncTask<Void, Void, Bitmap, DetailsActivity>(this) {
-				@Override
-				protected Bitmap doInBackground(Void... params) {
-					if (activity == null) {
-						return null;
-					}
-					
-					Bitmap bm = BitmapFactory.decodeFile(iconFilePath);
-					return bm;
+			if (getLastCustomNonConfigurationInstance() != null) {
+				loadBitmap = (LoadBitmap) getLastCustomNonConfigurationInstance();
+				loadBitmap.attach(this);
+				if (loadBitmap.bitmap != null) {
+					setSupportActionBarIcon(loadBitmap.bitmap);
 				}
-				
-				@Override
-				protected void onPostExecute(Bitmap bm) {
-					if (activity == null) {
-						return;
-					}
-					
-					BitmapDrawable icon = new BitmapDrawable(activity.getResources(), bm);
-					activity.getSupportActionBar().setIcon(icon);
-				}
-			});
+			} else {
+				loadBitmap = new LoadBitmap(this);
+				Utils.execute(loadBitmap, iconFilePath);
+			}
 		}
 		
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -322,6 +313,40 @@ public class DetailsActivity extends BaseActivity implements DetailedStatsActivi
 						Toast.LENGTH_LONG).show();
 			}
 		}
+	}
+	
+	private static class LoadBitmap extends DetachableAsyncTask<String, Void, Bitmap, DetailsActivity> {
+		
+		Bitmap bitmap;
+		
+		LoadBitmap(DetailsActivity activity) {
+			super(activity);
+		}
+		
+		@Override
+		protected Bitmap doInBackground(String... params) {
+			if (activity == null) {
+				return null;
+			}
+			
+			Bitmap bm = BitmapFactory.decodeFile(params[0]);
+			bitmap = bm;
+			return bm;
+		}
+		
+		@Override
+		protected void onPostExecute(Bitmap bm) {
+			if (activity == null) {
+				return;
+			}
+			
+			activity.setSupportActionBarIcon(bm);
+		}
+	}
+	
+	private void setSupportActionBarIcon(Bitmap bm) {
+		BitmapDrawable icon = new BitmapDrawable(getResources(), bm);
+		getSupportActionBar().setIcon(icon);
 	}
 
 }
