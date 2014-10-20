@@ -82,7 +82,9 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 			if (getLastCustomNonConfigurationInstance() != null) {
 				loadBitmap = (LoadBitmap) getLastCustomNonConfigurationInstance();
 				loadBitmap.attach(this);
-				setSupportActionBarIcon(loadBitmap.bitmap);
+				if (loadBitmap.bitmap != null) {
+					setSupportActionBarIcon(loadBitmap.bitmap);
+				}
 			} else {
 				loadBitmap = new LoadBitmap(this);
 				Utils.execute(loadBitmap, iconFilePath);
