@@ -45,6 +45,7 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 	private LinksListAdapter linksListAdapter;
 
 	private LoadLinksDb loadLinksDb;
+	private LoadBitmap loadBitmap;
 
 	private AppInfo appInfo;
 	private List<Link> links;
@@ -78,9 +79,16 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 		}
 
 		if (iconFilePath != null) {
-			Bitmap bm = BitmapFactory.decodeFile(iconFilePath);
-			BitmapDrawable icon = new BitmapDrawable(getResources(), bm);
-			getSupportActionBar().setIcon(icon);
+			if (getLastCustomNonConfigurationInstance() != null) {
+				loadBitmap = (LoadBitmap) getLastCustomNonConfigurationInstance();
+				loadBitmap.attach(this);
+				if (loadBitmap.bitmap != null) {
+					setSupportActionBarIcon(loadBitmap.bitmap);
+				}
+			} else {
+				loadBitmap = new LoadBitmap(this);
+				Utils.execute(loadBitmap, iconFilePath);
+			}
 		}
 
 		LayoutInflater layoutInflater = getLayoutInflater();
@@ -257,6 +265,39 @@ public class AppInfoActivity extends SherlockFragmentActivity implements
 			activity.refreshLinks();
 		}
 
+	}
+	
+	private static class LoadBitmap extends DetachableAsyncTask<String, Void, Bitmap, AppInfoActivity> {
+		
+		Bitmap bitmap;
+		
+		LoadBitmap(AppInfoActivity activity) {
+			super(activity);
+		}
+		
+		@Override
+		protected Bitmap doInBackground(String... params) {
+			if (activity == null) {
+				return null;
+			}
+			Bitmap bm = BitmapFactory.decodeFile(params[0]);
+			bitmap = bm;
+			return bm;
+		}
+		
+		@Override
+		protected void onPostExecute(Bitmap bm) {
+			if (activity == null) {
+				return;
+			}
+			
+			activity.setSupportActionBarIcon(bm);
+		}
+	}
+	
+	private void setSupportActionBarIcon(Bitmap bm) {
+		BitmapDrawable icon = new BitmapDrawable(getResources(), bm);
+		getSupportActionBar().setIcon(icon);
 	}
 
 	private void getLinksFromDb() {
