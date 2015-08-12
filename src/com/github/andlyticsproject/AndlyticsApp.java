@@ -13,7 +13,7 @@ import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender;
 
-@ReportsCrashes(sharedPreferencesMode = Context.MODE_PRIVATE, sharedPreferencesName = Preferences.PREF, mode = ReportingInteractionMode.TOAST)
+//@ReportsCrashes(sharedPreferencesMode = Context.MODE_PRIVATE, sharedPreferencesName = Preferences.PREF, mode = ReportingInteractionMode.TOAST)
 public class AndlyticsApp extends Application {
 
 	private static final String TAG = AndlyticsApp.class.getSimpleName();
@@ -28,7 +28,7 @@ public class AndlyticsApp extends Application {
 	public void onCreate() {
 		super.onCreate();
 
-		initAcra();
+		//initAcra();
 
 		// open DB here to  force schema and preferences migration
 		// the DB is kept open through the lifecycle ot the app, no need to 
