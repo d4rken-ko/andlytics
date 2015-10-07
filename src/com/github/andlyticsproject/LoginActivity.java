@@ -10,13 +10,14 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
-import android.widget.ListView;
 
 import com.github.andlyticsproject.model.DeveloperAccount;
 import com.github.andlyticsproject.sync.AutosyncHandler;
@@ -50,7 +51,7 @@ public class LoginActivity extends Activity implements AccountSelectedListener {
     private boolean blockGoingBack = false;
     private DeveloperAccount selectedAccount = null;
     private View okButton;
-    private ListView accountList;
+    private RecyclerView accountList;
 
     private AccountManager accountManager;
     private DeveloperAccountManager developerAccountManager;
@@ -83,7 +84,7 @@ public class LoginActivity extends Activity implements AccountSelectedListener {
 
         setContentView(R.layout.login);
         setProgressBarIndeterminateVisibility(false);
-        accountList = (ListView) findViewById(R.id.login_input);
+        accountList = (RecyclerView) findViewById(R.id.login_input);
 
         okButton = findViewById(R.id.login_ok_button);
         okButton.setClickable(true);
@@ -179,8 +180,9 @@ public class LoginActivity extends Activity implements AccountSelectedListener {
     }
 
     protected void showAccountList() {
+        accountList.setLayoutManager(new LinearLayoutManager(this));
         this.developerAccounts = getDeveloperAccounts();
-        AccountListAdapter adapter = new AccountListAdapter(this, R.layout.login_list_item, developerAccounts, this);
+        AccountListAdapter adapter = new AccountListAdapter(developerAccounts, this);
         accountList.setAdapter(adapter);
 
         okButton.setEnabled(isAtLeastOneAccountEnabled());
