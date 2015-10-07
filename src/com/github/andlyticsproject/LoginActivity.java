@@ -34,7 +34,7 @@ import java.util.List;
  * or
  * Main -> LoginActivity -> Main
  */
-public class LoginActivity extends Activity implements CheckboxListener {
+public class LoginActivity extends Activity implements AccountSelectedListener {
 
     private static final String TAG = LoginActivity.class.getSimpleName();
 
@@ -187,7 +187,7 @@ public class LoginActivity extends Activity implements CheckboxListener {
     }
 
     @Override
-    public void checkBoxSelected(boolean checked, DeveloperAccount account) {
+    public void accountSelected(boolean checked, DeveloperAccount account) {
         if (checked) {
             account.activate();
         } else {

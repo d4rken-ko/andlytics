@@ -17,10 +17,10 @@ public class AccountListAdapter extends ArrayAdapter<DeveloperAccount> {
 
     private final Context context;
     private final int resource;
-    private final CheckboxListener listener;
+    private final AccountSelectedListener listener;
     private List<DeveloperAccount> developerAccounts = new ArrayList<>();
 
-    public AccountListAdapter(Context context, int resource, List<DeveloperAccount> developerAccounts, CheckboxListener listener) {
+    public AccountListAdapter(Context context, int resource, List<DeveloperAccount> developerAccounts, AccountSelectedListener listener) {
         super(context, resource, developerAccounts);
         this.resource = resource;
         this.context = context;
@@ -38,7 +38,7 @@ public class AccountListAdapter extends ArrayAdapter<DeveloperAccount> {
         checkBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.checkBoxSelected(checkBox.isChecked(), developerAccounts.get(position));
+                listener.accountSelected(checkBox.isChecked(), developerAccounts.get(position));
             }
         });
         developerEmail.setText(developerAccounts.get(position).getName());
