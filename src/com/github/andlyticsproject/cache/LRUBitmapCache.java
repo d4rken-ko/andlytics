@@ -28,7 +28,7 @@ public class LRUBitmapCache {
 	 */
 	public LRUBitmapCache(int cacheSize) {
 		this.cacheSize = cacheSize;
-		int hashTableCapacity = (int) FloatMath.ceil(cacheSize / hashTableLoadFactor) + 1;
+		int hashTableCapacity = (int) Math.ceil(cacheSize / hashTableLoadFactor) + 1;
 		map = new LinkedHashMap<String, Bitmap>(hashTableCapacity, hashTableLoadFactor, true) {
 			// (an anonymous inner class)
 			private static final long serialVersionUID = 1;
