@@ -39,289 +39,289 @@ import java.util.List;
  */
 public class LoginActivity extends MaterialActivity {
 
-    private static final String TAG = LoginActivity.class.getSimpleName();
+	private static final String TAG = LoginActivity.class.getSimpleName();
 
-    public static final String EXTRA_MANAGE_ACCOUNTS_MODE = "com.github.andlyticsproject.manageAccounts";
+	public static final String EXTRA_MANAGE_ACCOUNTS_MODE = "com.github.andlyticsproject.manageAccounts";
 
-    public static final String AUTH_TOKEN_TYPE_ANDROID_DEVELOPER = "androiddeveloper";
+	public static final String AUTH_TOKEN_TYPE_ANDROID_DEVELOPER = "androiddeveloper";
 
-    private List<DeveloperAccount> developerAccounts;
+	private List<DeveloperAccount> developerAccounts;
 
-    private boolean manageAccountsMode = false;
-    private View okButton;
+	private boolean manageAccountsMode = false;
+	private View okButton;
 
-    private AccountManager accountManager;
-    private DeveloperAccountManager developerAccountManager;
-    private AutosyncHandler syncHandler;
-    private View busyView;
-    private AccountListAdapter adapter;
+	private AccountManager accountManager;
+	private DeveloperAccountManager developerAccountManager;
+	private AutosyncHandler syncHandler;
+	private View busyView;
+	private AccountListAdapter adapter;
 
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.login);
-        initToolbar();
-        busyView = findViewById(R.id.busyView);
-        RecyclerView accountList = (RecyclerView) findViewById(R.id.accountList);
-        okButton = findViewById(R.id.login_ok_button);
-        setBusy(true);
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.login);
+		initToolbar();
+		busyView = findViewById(R.id.busyView);
+		RecyclerView accountList = (RecyclerView) findViewById(R.id.accountList);
+		okButton = findViewById(R.id.login_ok_button);
+		setBusy(true);
 
-        accountManager = AccountManager.get(this);
-        developerAccountManager = DeveloperAccountManager.getInstance(getApplicationContext());
-        syncHandler = new AutosyncHandler();
+		accountManager = AccountManager.get(this);
+		developerAccountManager = DeveloperAccountManager.getInstance(getApplicationContext());
+		syncHandler = new AutosyncHandler();
 
-        // When called from accounts action item in Main, this flag is passed to
-        // indicate
-        // that LoginActivity should not auto login as we are managing the
-        // accounts,
-        // rather than performing the initial login
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            manageAccountsMode = extras.getBoolean(LoginActivity.EXTRA_MANAGE_ACCOUNTS_MODE);
-        }
+		// When called from accounts action item in Main, this flag is passed to
+		// indicate
+		// that LoginActivity should not auto login as we are managing the
+		// accounts,
+		// rather than performing the initial login
+		Bundle extras = getIntent().getExtras();
+		if (extras != null) {
+			manageAccountsMode = extras.getBoolean(LoginActivity.EXTRA_MANAGE_ACCOUNTS_MODE);
+		}
 
-        if (manageAccountsMode) {
-            getSupportActionBar().setTitle(R.string.manage_accounts);
-        }
-
-
-        setBusy(false);
-
-        okButton.setClickable(true);
-        okButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new AsyncTask<Void, Void, Void>() {
-
-                    @Override
-                    protected void onPreExecute() {
-                        setBusy(true);
-                        okButton.setEnabled(false);
-                    }
-
-                    @Override
-                    protected Void doInBackground(Void... args) {
-                        saveDeveloperAccounts();
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(Void arg) {
-                        setBusy(false);
-                        okButton.setEnabled(true);
-                        for (DeveloperAccount account : developerAccounts) {
-                            if (account.isVisible()) {
-                                redirectToMain(account.getName(), account.getDeveloperId());
-                                return;
-                            }
-                        }
-                        throw new UnsupportedOperationException("no account was selected");
-                    }
-                }.execute();
-            }
-        });
-
-        adapter = new AccountListAdapter();
-        accountList.setLayoutManager(new LinearLayoutManager(this));
-        accountList.setAdapter(adapter);
-    }
+		if (manageAccountsMode) {
+			getSupportActionBar().setTitle(R.string.manage_accounts);
+		}
 
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+		setBusy(false);
 
-        boolean skipAutoLogin = Preferences.getSkipAutologin(this);
-        DeveloperAccount selectedAccount = developerAccountManager.getSelectedDeveloperAccount();
-        if (!manageAccountsMode & !skipAutoLogin & selectedAccount != null) {
-            redirectToMain(selectedAccount.getName(), selectedAccount.getDeveloperId());
-        } else {
-            showAccountList();
-        }
-    }
+		okButton.setClickable(true);
+		okButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				new AsyncTask<Void, Void, Void>() {
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.login_menu, menu);
-        return true;
-    }
+					@Override
+					protected void onPreExecute() {
+						setBusy(true);
+						okButton.setEnabled(false);
+					}
 
-    /**
-     * Called if item in option menu is selected.
-     *
-     * @param item The chosen menu item
-     * @return boolean true/false
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.itemLoginmenuAdd:
-                addNewGoogleAccount();
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+					@Override
+					protected Void doInBackground(Void... args) {
+						saveDeveloperAccounts();
+						return null;
+					}
 
-    protected void showAccountList() {
-        Account[] googleAccounts = accountManager.getAccountsByType(AutosyncHandler.ACCOUNT_TYPE_GOOGLE);
-        List<DeveloperAccount> dbAccounts = developerAccountManager.getAllDeveloperAccounts();
-        developerAccounts = new ArrayList<>();
-        for (Account googleAccount : googleAccounts) {
-            DeveloperAccount developerAccount = DeveloperAccount
-                    .createHidden(googleAccount.name);
-            int idx = dbAccounts.indexOf(developerAccount);
-            // use persistent object if exists
-            if (idx != -1) {
-                developerAccount = dbAccounts.get(idx);
-            }
-            developerAccounts.add(developerAccount);
+					@Override
+					protected void onPostExecute(Void arg) {
+						setBusy(false);
+						okButton.setEnabled(true);
+						for (DeveloperAccount account : developerAccounts) {
+							if (account.isVisible()) {
+								redirectToMain(account.getName(), account.getDeveloperId());
+								return;
+							}
+						}
+						throw new UnsupportedOperationException("no account was selected");
+					}
+				}.execute();
+			}
+		});
 
-            // Setup auto sync
-            // only do this when managing accounts, otherwise sync may start
-            // in the background before accounts are actually configured
-            if (manageAccountsMode) {
-                // Ensure it matches the sync period (excluding disabled state)
-                syncHandler.setAutosyncPeriod(googleAccount.name,
-                        Preferences.getLastNonZeroAutosyncPeriod(this));
-                // Now make it match the master sync (including disabled state)
-                syncHandler.setAutosyncPeriod(googleAccount.name,
-                        Preferences.getAutosyncPeriod(this));
-            }
-        }
+		adapter = new AccountListAdapter();
+		accountList.setLayoutManager(new LinearLayoutManager(this));
+		accountList.setAdapter(adapter);
+	}
 
-        adapter.setAccounts(developerAccounts);
 
-        // Update ok button
-        updateOkButton();
-    }
+	@Override
+	protected void onResume() {
+		super.onResume();
 
-    private void saveDeveloperAccounts() {
-        for (DeveloperAccount account : developerAccounts) {
-            if (account.isHidden()) {
-                // They are removing the account from Andlytics, disable
-                // syncing
-                syncHandler.setAutosyncEnabled(account.getName(), false);
-            } else {
-                // Make it match the master sync period (including
-                // disabled state)
-                syncHandler.setAutosyncPeriod(account.getName(),
-                        Preferences.getAutosyncPeriod(LoginActivity.this));
-            }
-            developerAccountManager.addOrUpdateDeveloperAccount(account);
-        }
-    }
+		boolean skipAutoLogin = Preferences.getSkipAutologin(this);
+		DeveloperAccount selectedAccount = developerAccountManager.getSelectedDeveloperAccount();
+		if (!manageAccountsMode & !skipAutoLogin & selectedAccount != null) {
+			redirectToMain(selectedAccount.getName(), selectedAccount.getDeveloperId());
+		} else {
+			showAccountList();
+		}
+	}
 
-    private void updateOkButton() {
-        okButton.setEnabled(isAtLeastOneAccountEnabled());
-    }
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		getMenuInflater().inflate(R.menu.login_menu, menu);
+		return true;
+	}
 
-    private boolean isAtLeastOneAccountEnabled() {
-        for (DeveloperAccount acc : developerAccounts) {
-            if (acc.isVisible()) {
-                return true;
-            }
-        }
-        return false;
-    }
+	/**
+	 * Called if item in option menu is selected.
+	 *
+	 * @param item The chosen menu item
+	 * @return boolean true/false
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.itemLoginmenuAdd:
+				addNewGoogleAccount();
+				break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
-    private void addNewGoogleAccount() {
-        AccountManagerCallback<Bundle> callback = new AccountManagerCallback<Bundle>() {
-            public void run(AccountManagerFuture<Bundle> future) {
-                try {
-                    Bundle bundle = future.getResult();
-                    bundle.keySet();
-                    Log.d(TAG, "account added: " + bundle);
+	protected void showAccountList() {
+		Account[] googleAccounts = accountManager.getAccountsByType(AutosyncHandler.ACCOUNT_TYPE_GOOGLE);
+		List<DeveloperAccount> dbAccounts = developerAccountManager.getAllDeveloperAccounts();
+		developerAccounts = new ArrayList<>();
+		for (Account googleAccount : googleAccounts) {
+			DeveloperAccount developerAccount = DeveloperAccount
+					.createHidden(googleAccount.name);
+			int idx = dbAccounts.indexOf(developerAccount);
+			// use persistent object if exists
+			if (idx != -1) {
+				developerAccount = dbAccounts.get(idx);
+			}
+			developerAccounts.add(developerAccount);
 
-                    showAccountList();
+			// Setup auto sync
+			// only do this when managing accounts, otherwise sync may start
+			// in the background before accounts are actually configured
+			if (manageAccountsMode) {
+				// Ensure it matches the sync period (excluding disabled state)
+				syncHandler.setAutosyncPeriod(googleAccount.name,
+						Preferences.getLastNonZeroAutosyncPeriod(this));
+				// Now make it match the master sync (including disabled state)
+				syncHandler.setAutosyncPeriod(googleAccount.name,
+						Preferences.getAutosyncPeriod(this));
+			}
+		}
 
-                } catch (OperationCanceledException e) {
-                    Log.d(TAG, "addAccount was canceled");
-                } catch (IOException e) {
-                    Log.d(TAG, "addAccount failed: " + e);
-                } catch (AuthenticatorException e) {
-                    Log.d(TAG, "addAccount failed: " + e);
-                }
-                // gotAccount(false);
-            }
-        };
+		adapter.setAccounts(developerAccounts);
 
-        // TODO request a weblogin: token here, so we have it cached?
-        accountManager.addAccount(AutosyncHandler.ACCOUNT_TYPE_GOOGLE,
-                LoginActivity.AUTH_TOKEN_TYPE_ANDROID_DEVELOPER, null, null /* options */,
-                LoginActivity.this, callback, null /* handler */);
-    }
+		// Update ok button
+		updateOkButton();
+	}
 
-    private void redirectToMain(String selectedAccount, String developerId) {
-        Preferences.saveSkipAutoLogin(this, false);
-        Intent intent = new Intent(LoginActivity.this, Main.class);
-        intent.putExtra(BaseActivity.EXTRA_AUTH_ACCOUNT_NAME, selectedAccount);
-        intent.putExtra(BaseActivity.EXTRA_DEVELOPER_ID, developerId);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
-        overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_out);
-        finish();
-    }
+	private void saveDeveloperAccounts() {
+		for (DeveloperAccount account : developerAccounts) {
+			if (account.isHidden()) {
+				// They are removing the account from Andlytics, disable
+				// syncing
+				syncHandler.setAutosyncEnabled(account.getName(), false);
+			} else {
+				// Make it match the master sync period (including
+				// disabled state)
+				syncHandler.setAutosyncPeriod(account.getName(),
+						Preferences.getAutosyncPeriod(LoginActivity.this));
+			}
+			developerAccountManager.addOrUpdateDeveloperAccount(account);
+		}
+	}
 
-    private void setBusy(boolean isBusy) {
-        busyView.setVisibility(isBusy ? View.VISIBLE : View.GONE);
-    }
+	private void updateOkButton() {
+		okButton.setEnabled(isAtLeastOneAccountEnabled());
+	}
 
-    private class AccountListAdapter extends RecyclerView.Adapter<AccountViewHolder> {
+	private boolean isAtLeastOneAccountEnabled() {
+		for (DeveloperAccount acc : developerAccounts) {
+			if (acc.isVisible()) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-        private List<DeveloperAccount> accounts;
+	private void addNewGoogleAccount() {
+		AccountManagerCallback<Bundle> callback = new AccountManagerCallback<Bundle>() {
+			public void run(AccountManagerFuture<Bundle> future) {
+				try {
+					Bundle bundle = future.getResult();
+					bundle.keySet();
+					Log.d(TAG, "account added: " + bundle);
 
-        @Override
-        public AccountViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            return new AccountViewHolder(inflater.inflate(R.layout.login_list_item, parent, false));
-        }
+					showAccountList();
 
-        @Override
-        public void onBindViewHolder(AccountViewHolder holder, int position) {
-            holder.setAccount(accounts.get(position));
-        }
+				} catch (OperationCanceledException e) {
+					Log.d(TAG, "addAccount was canceled");
+				} catch (IOException e) {
+					Log.d(TAG, "addAccount failed: " + e);
+				} catch (AuthenticatorException e) {
+					Log.d(TAG, "addAccount failed: " + e);
+				}
+				// gotAccount(false);
+			}
+		};
 
-        @Override
-        public int getItemCount() {
-            return accounts != null ? accounts.size() : 0;
-        }
+		// TODO request a weblogin: token here, so we have it cached?
+		accountManager.addAccount(AutosyncHandler.ACCOUNT_TYPE_GOOGLE,
+				LoginActivity.AUTH_TOKEN_TYPE_ANDROID_DEVELOPER, null, null /* options */,
+				LoginActivity.this, callback, null /* handler */);
+	}
 
-        public void setAccounts(List<DeveloperAccount> accounts) {
-            this.accounts = accounts;
-            notifyDataSetChanged();
-        }
-    }
+	private void redirectToMain(String selectedAccount, String developerId) {
+		Preferences.saveSkipAutoLogin(this, false);
+		Intent intent = new Intent(LoginActivity.this, Main.class);
+		intent.putExtra(BaseActivity.EXTRA_AUTH_ACCOUNT_NAME, selectedAccount);
+		intent.putExtra(BaseActivity.EXTRA_DEVELOPER_ID, developerId);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		startActivity(intent);
+		overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_out);
+		finish();
+	}
 
-    private class AccountViewHolder extends RecyclerView.ViewHolder implements OnClickListener {
+	private void setBusy(boolean isBusy) {
+		busyView.setVisibility(isBusy ? View.VISIBLE : View.GONE);
+	}
 
-        private final TextView nameView;
-        private final CheckBox checkBoxView;
-        private DeveloperAccount account;
+	private class AccountListAdapter extends RecyclerView.Adapter<AccountViewHolder> {
 
-        public AccountViewHolder(View itemView) {
-            super(itemView);
-            nameView = (TextView) itemView.findViewById(R.id.login_list_item_text);
-            checkBoxView = (CheckBox) itemView.findViewById(R.id.login_list_item_enabled);
-            itemView.setOnClickListener(this);
-        }
+		private List<DeveloperAccount> accounts;
 
-        public void setAccount(DeveloperAccount developerAccount) {
-            this.account = developerAccount;
-            nameView.setText(developerAccount.getName());
-            checkBoxView.setChecked(!developerAccount.isHidden());
-        }
+		@Override
+		public AccountViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+			LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+			return new AccountViewHolder(inflater.inflate(R.layout.login_list_item, parent, false));
+		}
 
-        @Override
-        public void onClick(View v) {
-            checkBoxView.toggle();
-            if (checkBoxView.isChecked())
-                account.activate();
-            else
-                account.hide();
+		@Override
+		public void onBindViewHolder(AccountViewHolder holder, int position) {
+			holder.setAccount(accounts.get(position));
+		}
 
-            updateOkButton();
-        }
-    }
+		@Override
+		public int getItemCount() {
+			return accounts != null ? accounts.size() : 0;
+		}
+
+		public void setAccounts(List<DeveloperAccount> accounts) {
+			this.accounts = accounts;
+			notifyDataSetChanged();
+		}
+	}
+
+	private class AccountViewHolder extends RecyclerView.ViewHolder implements OnClickListener {
+
+		private final TextView nameView;
+		private final CheckBox checkBoxView;
+		private DeveloperAccount account;
+
+		public AccountViewHolder(View itemView) {
+			super(itemView);
+			nameView = (TextView) itemView.findViewById(R.id.login_list_item_text);
+			checkBoxView = (CheckBox) itemView.findViewById(R.id.login_list_item_enabled);
+			itemView.setOnClickListener(this);
+		}
+
+		public void setAccount(DeveloperAccount developerAccount) {
+			this.account = developerAccount;
+			nameView.setText(developerAccount.getName());
+			checkBoxView.setChecked(!developerAccount.isHidden());
+		}
+
+		@Override
+		public void onClick(View v) {
+			checkBoxView.toggle();
+			if (checkBoxView.isChecked())
+				account.activate();
+			else
+				account.hide();
+
+			updateOkButton();
+		}
+	}
 
 
 }
