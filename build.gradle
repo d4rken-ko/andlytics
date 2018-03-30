@@ -1,9 +1,17 @@
 buildscript {
     repositories {
         mavenCentral()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
+        jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.2'
+        classpath 'com.android.tools.build:gradle:3.0.1'
+    }
+    repositories {
+        jcenter()
     }
 }
 
@@ -13,6 +21,10 @@ repositories {
     mavenCentral()
     maven { 
         url "https://repository-achartengine.forge.cloudbees.com/snapshot/"
+    }
+    maven {
+        url 'https://maven.google.com/'
+        name 'Google'
     }
 }
 
@@ -38,21 +50,32 @@ dependencies {
 }
 
 android {
+    flavorDimensions "default"
 
 	compileSdkVersion 22
-	buildToolsVersion "23.0.3"
+	buildToolsVersion '26.0.2'
 
-    // lintOptions {
-    //     checkReleaseBuilds false
-    //     abortOnError false
-    // }
+     lintOptions {
+         checkReleaseBuilds false
+         abortOnError false
+     }
 
+    defaultConfig {
+        versionCode 269
+        versionName '2.8.4'
+    }
 
     signingConfigs {
         if (rootProject.file('andlytics-release-key.keystore').exists()) {
             release {
                 storeFile file ("andlytics-release-key.keystore")
             }
+        }
+        gh {
+            storeFile file ('keystore/andlytics.jks')
+            keyAlias    'andlytics'
+            keyPassword 'andlytics'
+            storePassword 'andlytics'
         }
     }
 
@@ -62,15 +85,33 @@ android {
                 signingConfig signingConfigs.release
             }
         }
+        debug {
+            if (rootProject.file('andlytics-release-key.keystore').exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
         releaseUnsigned.initWith(buildTypes.release)
         releaseUnsigned {
             signingConfig null
+        }
+
+        gh {
+            signingConfig signingConfigs.gh
         }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_6
         targetCompatibility JavaVersion.VERSION_1_6
+    }
+
+    productFlavors {
+        playstore {
+            versionNameSuffix "-playstore"
+        }
+        nobackup {
+            versionNameSuffix "-nobackup"
+        }
     }
 
 	sourceSets {
@@ -82,6 +123,10 @@ android {
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
+        }
+
+        playstore { 
+            manifest.srcFile 'AndroidManifest-backup.xml'
         }
 
         // Move the build types to build-types/<type>
@@ -104,3 +149,24 @@ if (project.hasProperty('storePassword')
     android.signingConfigs.release.keyAlias = keyAlias
     android.signingConfigs.release.keyPassword = keyPassword
 }
+
+android.applicationVariants.all { v ->
+   /* v.outputs.each { out ->
+        def fileName = out.outputFile.toString()
+        def idx = fileName.lastIndexOf('/') + 1
+        fileName = fileName.substring(0, idx)
+        fileName += "andlytics-" + v.buildType.name + '-' + android.defaultConfig.versionName + '.apk'
+        out.outputFile = new File(fileName)
+
+    }*/
+    v.outputs.all { output ->
+        //def fileName = out.outputFile.toString()
+        def fileName = outputFileName
+        def idx = fileName.lastIndexOf('/') + 1
+        fileName = fileName.substring(0, idx)
+        fileName += "andlytics-" + v.buildType.name + '-' + android.defaultConfig.versionName + '.apk'
+//        out.outputFile = new File(fileName)
+        outputFileName = new File(fileName)
+    }
+}
+
