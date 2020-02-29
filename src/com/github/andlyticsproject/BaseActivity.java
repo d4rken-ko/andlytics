@@ -99,7 +99,7 @@ public class BaseActivity extends AppCompatActivity {
 			intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
 		}
 		if (skipDataReload) {
-			setSkipMainReload(true);
+			this.skipMainReload = true;
 		}
 
 		startActivity(intent);
