@@ -1,85 +1,78 @@
 # Andlytics
 
-This repository contains the source code for the Andlytics Android app.
+이 저장소에는 Andlytics Android 앱의 소스 코드가 들어 있습니다.
 
-<a href="https://play.google.com/store/apps/details?id=com.github.andlyticsproject" alt="Download from Google Play">
-  <img src="http://www.android.com/images/brand/android_app_on_play_large.png">
+<a href="https://play.google.com/store/apps/details?id=com.github.andlyticsproject" alt="Google Play에서 다운로드">
+<img src="http://www.android.com/images/brand/android_app_on_play_large.png">
 </a>
 
 ![](https://lh4.ggpht.com/ckVylBqx0sS1b-KW99qkg7NYuDNRGGstnZKsw-qe3TnpUOH4em5cH-8QuPXs2NQj9Nou=w705)
 
+버그나 기능 요청을 보고하고 알려진 문제 목록을 보려면 [문제](https://github.com/AndlyticsProject/andlytics/issues) 섹션을 참조하세요.
 
-Please see the [issues](https://github.com/AndlyticsProject/andlytics/issues) section to
-report any bugs or feature requests and to see the list of known issues.
-
-### Alpha/Beta Versions
-Join the G+ community and register as a tester to get latest alpha/beta versions:
+### 알파/베타 버전
+G+ 커뮤니티에 가입하고 테스터로 등록하여 최신 알파/베타 버전을 받으세요.
 
 https://plus.google.com/communities/106533634605835980810
 
 https://play.google.com/apps/testing/com.github.andlyticsproject
 
-### Nightly builds
+### 야간 빌드
 
 * http://andlytics.schoentoon.com/andlytics.apk
 
-You can check which commit it's build from at http://andlytics.schoentoon.com/latest_version and it'll get updated everynight just past midnight (GMT +1)
+http://andlytics.schoentoon.com/latest_version에서 빌드된 커밋을 확인할 수 있으며 매일 자정(GMT +1) 직후에 업데이트됩니다.
 
+## 라이선스
 
-## License
+저작권 2012 Timelappse
+저작권 2012 Andlytics Project
 
-     Copyright 2012 Timelappse
-     Copyright 2012 Andlytics Project
+Apache 라이선스 버전 2.0(이하 "라이선스")에 따라 라이선스가 부여됨.
+라이선스를 준수하지 않는 한 이 파일을 사용할 수 없습니다.
+라이선스 사본은 다음에서 얻을 수 있습니다.
 
-     Licensed under the Apache License, Version 2.0 (the "License");
-     you may not use this file except in compliance with the License.
-     You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
 
-         http://www.apache.org/licenses/LICENSE-2.0
+해당 법률에 의해 요구되거나 서면으로 동의하지 않는 한, 라이선스에 따라 배포되는 소프트웨어는 명시적이든 묵시적이든 어떠한 종류의 보증이나 조건 없이 "있는 그대로" 배포됩니다.
+라이선스에 따른 권한 및 제한을 규정하는 특정 언어는 라이선스를 참조하세요.
 
-     Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASIS,
-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     See the License for the specific language governing permissions and
-     limitations under the License.
+# 설명
 
-# Description
+Andlytics는 Google Play 개발자 콘솔에서 통계를 수집합니다. Google Play에 게시된 모든 Android 앱에 대한 활성 설치, 총 설치, 평가 및 댓글을 추적할 수 있습니다.
 
-Andlytics collects statistics from the Google Play Developer Console. It lets you track active installs, total installs, ratings, and comments for all your Android apps that are published on Google Play.
+Andlytics는 수익, 요청 및 노출을 포함한 AdMob 통계도 수집할 수 있습니다. 변경 사항이 발생할 때 통계 및 알림의 백그라운드 동기화를 지원합니다.
 
-Andlytics can also collect AdMob statistics, including revenue, requests and impressions. It supports background syncing of stats and notifications for when changes occur.
+Google은 통계를 수집하기 위한 공개 API를 제공하지 않습니다. 따라서 Google에서 사이트를 변경하면 Andlytics가 작동을 멈출 수 있습니다. 그런 경우 따라잡으려고 노력하는 동안 기다려 주시기 바랍니다.
 
-Google does not provide a public API for collecting statistics. Therefore, if Google makes a change to the site it may cause Andlytics to stop working. In that case please be patient while we try to catch up.
+Andlytics는 오픈 소스이므로 GitHub을 통해 자유롭게 기여하세요.
 
-Andlytics is open source, please feel free to contribute via GitHub.
+Andlytics는 어떤 방식으로든 Google과 연관이 없습니다.
 
-Andlytics is not associated with Google in any way.
+"Google Apps for Business" 및 다중 연결 개발자 계정은 아직 지원되지 않습니다. 이러한 계정 중 하나가 있는 경우 GitHub을 통해 문의하여 지원을 추가하세요.
 
-"Google Apps for Business" and Multi-connected developer accounts are not supported yet. If you have one of these accounts, contact us via GitHub and help us to add support.
+일부 기기에서 AdMob 계정이 계속 사라지는데, Andlytics를 SD 카드에서 내부 저장소로 이동하면 이 문제가 해결될 수 있습니다.
 
-On some devices AdMob accounts keep disappearing, moving Andlytics from sdcard to internal storage might fix this.
+Google 계정에 연결된 AdMob 계정의 경우 계정 정보 페이지 http://www.admob.com/my_account/account_info에서 API 비밀번호를 찾을 수 있습니다.
 
-For AdMob accounts that are linked to a Google Account you can find the API password on the Account Information page http://www.admob.com/my_account/account_info.
+키워드: 개발자 콘솔, 개발자 도구, Android 개발자
 
-Keywords: Developer console, developer tools, android developers
+## 기여
 
+이 저장소를 포크하고
+[풀 요청](https://github.com/AndlyticsProject/andlytics/pulls)을 사용하여 다시 기여하세요.
 
-## Contributing
+'마스터' 브랜치는 항상 안정적이고 테스트되었으며 사용할 준비가 된 상태여야 Google에서 'API'를 중단할 때 빠르게 수정 사항을 구현할 수 있습니다. 따라서 모든 풀 리퀘스트는 ['dev'](https://github.com/AndlyticsProject/andlytics/tree/dev) 브랜치를 기반으로 하고 이를 대상으로 해야 합니다.
 
-Please fork this repository and contribute back using
-[pull requests](https://github.com/AndlyticsProject/andlytics/pulls).
+코드를 제출할 때는 주변 코드와 일관성을 유지하도록 노력하세요. 일반적인 규칙은 다음과 같습니다.
+1. 공백이 아닌 탭을 사용하세요.
+2. 한 줄로 하면 더 보기 좋지 않은 한 최대 줄 길이는 100줄로 하세요.
 
-The 'master' branch should always be in a stable, tested, and ready to go state so that we can implement quick fixes when Google breaks the 'API'. Therefore, all pull requests should be based on, and targeted to, the ['dev'](https://github.com/AndlyticsProject/andlytics/tree/dev) branch.
+크거나 작은 기여, 주요 기능, 버그 수정, 단위/통합 테스트는 환영하고 감사하지만, 철저히 검토하고 논의할 것입니다.
 
-When submitting code, please try to be consistent with the code around you. As a general rule:
-1. Use Tabs, not spaces
-2. Aim for a maximum line length of 100, unless it looks better being on a single line
+번역은 [crowdin.net](http://crowdin.net/project/andlytics)을 통해 수행해야 합니다.
 
-Any contributions, large or small, major features, bug fixes, unit/integration tests are welcomed and appreciated, but will be thoroughly reviewed and discussed.
-
-Translations should be done via [crowdin.net](http://crowdin.net/project/andlytics).
-
-## Examples 
+## 예제
 git clone https://github.com/<git_account>/andlytics.git
 
 cd <directory>
@@ -90,13 +83,13 @@ git checkout master
 git pull upstream master && git push origin master
 git checkout -b readme-update
 
-Create a Pull Request to submit your changes
+변경 사항을 제출하기 위한 풀 리퀘스트 만들기
 
-### Building your own version
+### 자체 버전 빌드
 
-Add the package name and your signing certificate hash to Google APIs console. See attached image:
+패키지 이름과 서명 인증서 해시를 Google API 콘솔에 추가합니다. 첨부된 이미지 참조:
 ![api-console](https://cloud.githubusercontent.com/assets/1053078/25211216/18b2dba4-25bf-11e7-9b5f-cf7a53776bc7.png)
 
-## SocialMedia
+## 소셜미디어
 
-<a href="https://plus.google.com/103867882342055020019" rel="publisher">Find us on Google+</a>
+<a href="https://plus.google.com/103867882342055020019" rel="publisher">Google+에서 찾아보세요</a>
